@@ -36,5 +36,16 @@ namespace customer_support_app.API.Controllers
 
             return StatusCode(response.Code, response);
         }
+
+        [HttpDelete(nameof(DeleteComment))]
+        [ProducesResponseType(typeof(IResult), 200)]
+        [ProducesResponseType(typeof(IResult), 400)]
+        [ProducesResponseType(typeof(IResult), 500)]
+        public async Task<IActionResult> DeleteComment([FromQuery]int id)
+        {
+            var response = await _commentService.DeleteComment(id);
+
+            return StatusCode(response.Code, response);
+        }
     }
 }

@@ -31,12 +31,14 @@ namespace customer_support_app.DAL.Concrete
                 var isTicketExist = await _context.Tickets
                     .Include(x => x.Creator)
                     .Include(x => x.Category)
+                    .Include(x => x.Comments)
+                    .ThenInclude(c => c.Creator)
                     .Where(x => x.Id == id)
                     .FirstOrDefaultAsync();
 
-                if(isTicketExist == null)
+                if (isTicketExist == null)
                 {
-                    return new ErrorDataResult<Ticket>("Bad request.",StatusCodes.Status400BadRequest);
+                    return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
                 return new SuccessDataResult<Ticket>(isTicketExist, StatusCodes.Status200OK);
@@ -54,10 +56,12 @@ namespace customer_support_app.DAL.Concrete
                 var tickets = await _context.Tickets
                     .Include(t => t.Creator)
                     .Include(t => t.Category)
+                    .Include(t => t.Comments)
+                    .ThenInclude(c => c.Creator)
                     .Where(t => t.CreatorId == id)
                     .ToListAsync();
 
-                  return new SuccessDataResult<List<Ticket>>(tickets,StatusCodes.Status200OK);
+                return new SuccessDataResult<List<Ticket>>(tickets, StatusCodes.Status200OK);
 
 
             }
@@ -71,20 +75,22 @@ namespace customer_support_app.DAL.Concrete
         {
             try
             {
-                var isTicketExist =await _context.Tickets
+                var isTicketExist = await _context.Tickets
                     .Include(x => x.Creator)
                     .Include(x => x.Category)
+                    .Include(x => x.Comments)
+                    .ThenInclude(c => c.Creator)
                     .Where(x => x.IsDeleted == false && x.Id == model.Id)
                     .FirstOrDefaultAsync();
 
                 if (isTicketExist == null)
                 {
-                    return new ErrorDataResult<Ticket>("Bad request.",StatusCodes.Status400BadRequest);
+                    return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
                 var isCategoryExist = await _context.Categories.Where(x => x.Id == model.CategoryId).FirstOrDefaultAsync();
 
-                if(isCategoryExist == null)
+                if (isCategoryExist == null)
                 {
                     return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
                 }
@@ -99,10 +105,10 @@ namespace customer_support_app.DAL.Concrete
                 _context.Update(isTicketExist);
                 await _context.SaveChangesAsync();
 
-                return new SuccessDataResult<Ticket>(isTicketExist,StatusCodes.Status200OK);
+                return new SuccessDataResult<Ticket>(isTicketExist, StatusCodes.Status200OK);
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new ErrorDataResult<Ticket>("Something went wrong.", StatusCodes.Status500InternalServerError);
             }

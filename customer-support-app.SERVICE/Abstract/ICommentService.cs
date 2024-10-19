@@ -13,5 +13,6 @@ namespace customer_support_app.SERVICE.Abstract
     {
         Task<IResult> AddCommentToTicket(AddCommentToTicketRequestModel model);
         Task<IDataResult<CommentViewModel>> UpdateComment(UpdateCommentRequestModel model,string updatedBy);
+        Task<IResult> DeleteComment(int id);
     }
 }

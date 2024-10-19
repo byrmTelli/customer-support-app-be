@@ -62,6 +62,12 @@ namespace customer_support_app.DAL.Context.DbContext
 
             #endregion
 
+            #region Query Filter
+            modelBuilder.Entity<Ticket>().HasQueryFilter(t => !t.IsDeleted);
+            modelBuilder.Entity<Category>().HasQueryFilter(t => !t.IsDeleted);
+            modelBuilder.Entity<Comment>().HasQueryFilter(t => !t.IsDeleted);
+            #endregion
+
 
         }
 

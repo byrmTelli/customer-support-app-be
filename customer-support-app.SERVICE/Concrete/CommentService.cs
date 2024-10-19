@@ -56,5 +56,23 @@ namespace customer_support_app.SERVICE.Concrete
                 return new ErrorDataResult<CommentViewModel>("Something went wrong.",StatusCodes.Status500InternalServerError);
             }
         }
+        public async Task<IResult> DeleteComment(int id)
+        {
+            try
+            {
+                var isCommentExist = await _commentDal.GetAsync(c => c.Id == id);
+
+                if(isCommentExist == null)
+                    return new ErrorResult("Bad Request.",StatusCodes.Status400BadRequest);
+
+                await _commentDal.DeleteAsync(isCommentExist,"dummy",false);
+
+                return new SuccessResult("Entity deleted successfully.",StatusCodes.Status200OK);
+            }
+            catch (Exception ex)
+            {
+                return new ErrorResult("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }
