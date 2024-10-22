@@ -8,30 +8,122 @@ using customer_support_app.CORE.ViewModels.Ticket;
 using customer_support_app.DAL.Abstract;
 using customer_support_app.SERVICE.Abstract;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using IResult = customer_support_app.CORE.Results.Abstract.IResult;
+using customer_support_app.CORE.ViewModels.Role;
 
 namespace customer_support_app.SERVICE.Concrete
 {
     public class TicketService : ITicketService
     {
         private readonly ITicketDal _ticketDal;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly ILogActivityDal _activityLogDal;
         private readonly IMapper _mapper;
-        public TicketService(ITicketDal ticketDal,IMapper mapper)
+        public TicketService(ITicketDal ticketDal,IMapper mapper,UserManager<AppUser> userManager,ILogActivityDal activityLogDal)
         {
             _ticketDal = ticketDal;
+            _userManager = userManager;
             _mapper = mapper;
+            _activityLogDal = activityLogDal;
+        }
+        public async Task<IDataResult<List<TicketViewModel>>> GetTickets(string userId)
+        {
+            try
+            {
+                // Is user exist ? 
+                var isUserExist = await _userManager.FindByIdAsync(userId);
+                if (isUserExist == null)
+                {
+                    return new ErrorDataResult<List<TicketViewModel>>("Bad request.",StatusCodes.Status400BadRequest);   
+                }
+                // Check user's role status
+                var userRoleQuery = await _userManager.GetRolesAsync(isUserExist);
+                var userRole = userRoleQuery.First();
+                if (String.IsNullOrEmpty(userRole))
+                {
+                    return new ErrorDataResult<List<TicketViewModel>>("Error occured.", StatusCodes.Status500InternalServerError);
+                }
+                // Case Customer
+                if(userRole == "customer")
+                {
+                    var customerResult = await _ticketDal.GetTicketsOfUser(isUserExist.Id);
+                    var customerTicketListVM = _mapper.Map<List<TicketViewModel>>(customerResult.Data);
+
+
+                    return new SuccessDataResult<List<TicketViewModel>>(customerTicketListVM, customerResult.Code);
+                }
+                // Case helpdesk
+
+                if(userRole == "helpdesk")
+                {
+                    var hdResult = await _ticketDal.GetTicketsOfHelpdesk(isUserExist.Id);
+                    var hdTicketListVM = _mapper.Map<List<TicketViewModel>>(hdResult.Data);
+
+
+                    return new SuccessDataResult<List<TicketViewModel>>(hdTicketListVM, hdResult.Code);
+                }
+
+                var result = await _ticketDal.GetListAsync();
+                var ticketListVM = _mapper.Map<List<TicketViewModel>>(result);
+
+
+                return new SuccessDataResult<List<TicketViewModel>>(ticketListVM, StatusCodes.Status200OK);
+
+
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<List<TicketViewModel>>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+            }
+        }
+        public async Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId)
+        {
+            try
+            {
+                var isUserExist = await _userManager.FindByIdAsync(assignToUserId);
+                if(isUserExist == null)
+                {
+                    return new ErrorDataResult<TicketViewModel>("Bad request.",StatusCodes.Status400BadRequest);
+                }
+
+                var result = await _ticketDal.AssingTicketToHelpdeskAsync(ticketId, assignToUserId);
+                if(!result.Success)
+                {
+                    return new ErrorDataResult<TicketViewModel>(result.Message,result.Code);
+                }
+
+                var userIdInt = Int32.Parse(assignToUserId);
+
+                var logRecord = new ActivityLog
+                {
+                    TicketId = ticketId,
+                    UserId = userIdInt,
+                    Description = $"Ticket assigned to {isUserExist.Name} {isUserExist.Surname}"
+                };
+
+                await _activityLogDal.LogActivity(logRecord);
+
+                return new SuccessDataResult<TicketViewModel>(result.Message, result.Code);
+
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<TicketViewModel>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+            }
         }
         public async Task<IDataResult<List<TicketViewModel>>> GetTicketsOfUser(int id)
         {
             try
             {
-                var tickets = await _ticketDal.GetTicketsOfUser(id);
+                var ticketsResponse = await _ticketDal.GetTicketsOfUser(id);
 
-                if(!String.IsNullOrEmpty(tickets.Message))
+                if(!String.IsNullOrEmpty(ticketsResponse.Message))
                 {
-                    return new ErrorDataResult<List<TicketViewModel>>(tickets.Message,tickets.Code);
+                    return new ErrorDataResult<List<TicketViewModel>>(ticketsResponse.Message, ticketsResponse.Code);
                 }
 
-                return new SuccessDataResult<List<TicketViewModel>>(_mapper.Map<List<TicketViewModel>>(tickets.Data),StatusCodes.Status200OK);
+                return new SuccessDataResult<List<TicketViewModel>>(_mapper.Map<List<TicketViewModel>>(ticketsResponse.Data), ticketsResponse.Code);
             }
             catch(Exception ex)
             {
@@ -74,18 +166,39 @@ namespace customer_support_app.SERVICE.Concrete
                 return new ErrorDataResult<TicketViewModel>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
             }
         } 
-        public async Task<IDataResult<TicketViewModel>> GetTicketById(int id)
+        public async Task<IDataResult<TicketViewModel>> GetTicketById(int ticketId, string senderId)
         {
             try
             {
-                var response = await _ticketDal.GetTickedById(id);
+                var isSenderExist = await _userManager.FindByIdAsync(senderId);
+
+                if(isSenderExist == null)
+                {
+                    return new ErrorDataResult<TicketViewModel>("Bad request.",StatusCodes.Status400BadRequest);
+                }
+
+                // Get user's role
+                var userRole = await _userManager.GetRolesAsync(isSenderExist);
+                var role = userRole.First();
+
+                var response = await _ticketDal.GetTickedById(ticketId, senderId, role);
 
                 if(!String.IsNullOrEmpty(response.Message))
                 {
                     return new ErrorDataResult<TicketViewModel>(response.Message, response.Code);
                 }
 
-                return new SuccessDataResult<TicketViewModel>(_mapper.Map<TicketViewModel>(response.Data),response.Code);
+                var ticketVM = _mapper.Map<TicketViewModel>(response.Data);
+
+                var assignedToUserRoleQuery = await _userManager.GetRolesAsync(response.Data.AssignedTo);
+
+                if (assignedToUserRoleQuery != null)
+                {
+                    var assignedToUserRole = assignedToUserRoleQuery.First();
+                    ticketVM.AssignedTo.Role = new RoleViewModel { Name = assignedToUserRole };
+                }
+
+                return new SuccessDataResult<TicketViewModel>(ticketVM, response.Code);
             }
             catch(Exception ex)
             {
@@ -96,14 +209,14 @@ namespace customer_support_app.SERVICE.Concrete
         {
             try
             {
-                var isTicketExist = await _ticketDal.GetTickedById(id);
+                var isTicketExist = await _ticketDal.GetAsync(x => x.Id == id);
 
-                if(!String.IsNullOrEmpty(isTicketExist.Message))
+                if(isTicketExist == null)
                 {
-                    return new ErrorResult(isTicketExist.Message, isTicketExist.Code);
+                    return new ErrorResult("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
-                await _ticketDal.DeleteAsync(isTicketExist.Data, "Dummy",false);
+                await _ticketDal.DeleteAsync(isTicketExist, "Dummy",false);
 
                 return new SuccessResult("Deleted successfully.",StatusCodes.Status200OK);
             }

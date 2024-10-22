@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using customer_support_app.DAL.Context.DbContext;
 
@@ -10,9 +11,11 @@ using customer_support_app.DAL.Context.DbContext;
 namespace customer_support_app.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241022131521_mig_3_activity_log_update")]
+    partial class mig_3_activity_log_update
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -322,6 +325,9 @@ namespace customer_support_app.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("AssignedToId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("AssignedUserId")
                         .HasColumnType("INTEGER");
 
@@ -359,7 +365,7 @@ namespace customer_support_app.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedUserId");
+                    b.HasIndex("AssignedToId");
 
                     b.HasIndex("CategoryId");
 
@@ -460,8 +466,8 @@ namespace customer_support_app.DAL.Migrations
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
                     b.HasOne("customer_support_app.CORE.DBModels.AppUser", "AssignedTo")
-                        .WithMany("AssignedTickets")
-                        .HasForeignKey("AssignedUserId");
+                        .WithMany()
+                        .HasForeignKey("AssignedToId");
 
                     b.HasOne("customer_support_app.CORE.DBModels.Category", "Category")
                         .WithMany("Tickets")
@@ -470,7 +476,7 @@ namespace customer_support_app.DAL.Migrations
                         .IsRequired();
 
                     b.HasOne("customer_support_app.CORE.DBModels.AppUser", "Creator")
-                        .WithMany("UsersTickets")
+                        .WithMany("Tickets")
                         .HasForeignKey("CreatorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -484,13 +490,11 @@ namespace customer_support_app.DAL.Migrations
 
             modelBuilder.Entity("customer_support_app.CORE.DBModels.AppUser", b =>
                 {
-                    b.Navigation("AssignedTickets");
-
                     b.Navigation("Comments");
 
                     b.Navigation("TicketActivities");
 
-                    b.Navigation("UsersTickets");
+                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Category", b =>

@@ -13,11 +13,14 @@ namespace customer_support_app.CORE.DBModels
         public string Title { get; set; }
         public string Content { get; set; }
         public TicketStatus Status { get; set; } = TicketStatus.Pending;
+        public int? AssignedUserId { get; set; }
+        public AppUser? AssignedTo { get; set; }
         public int CategoryId { get; set; }
         public Category Category { get; set; }
         public bool IsPublished { get; set; } = false;
         public int CreatorId { get; set; }
         public AppUser Creator { get; set; }
         public ICollection<Comment> Comments { get; set; }
+        public virtual ICollection<ActivityLog> Activities { get; set; }
     }
 }

@@ -31,6 +31,7 @@ namespace customer_support_app.DAL.Context.DbContext
         public DbSet<Category> Categories { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,7 +47,7 @@ namespace customer_support_app.DAL.Context.DbContext
                 .HasForeignKey(ticket => ticket.CategoryId);
 
             modelBuilder.Entity<AppUser>()
-                .HasMany(user => user.Tickets)
+                .HasMany(user => user.UsersTickets)
                 .WithOne(ticket => ticket.Creator)
                 .HasForeignKey(ticket => ticket.CreatorId);
 
@@ -59,6 +60,21 @@ namespace customer_support_app.DAL.Context.DbContext
                 .HasMany(user => user.Comments)
                 .WithOne(comment => comment.Creator)
                 .HasForeignKey(comment => comment.CreatorId);
+
+            modelBuilder.Entity<AppUser>()
+                .HasMany(user => user.AssignedTickets)
+                .WithOne(ticket => ticket.AssignedTo)
+                .HasForeignKey(ticket => ticket.AssignedUserId);
+
+            modelBuilder.Entity<AppUser>()
+                .HasMany(user => user.TicketActivities)
+                .WithOne(activity => activity.User)
+                .HasForeignKey(activity => activity.UserId);
+
+            modelBuilder.Entity<Ticket>()
+                .HasMany(ticket => ticket.Activities)
+                .WithOne(activity => activity.Ticket)
+                .HasForeignKey(activity => activity.TicketId);
 
             #endregion
 

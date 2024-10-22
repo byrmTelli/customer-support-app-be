@@ -14,7 +14,9 @@ namespace customer_support_app.DAL.Abstract
     public interface ITicketDal:IEntityRepository<Ticket>
     {
         Task<IDataResult<List<Ticket>>> GetTicketsOfUser(int id);
-        Task<IDataResult<Ticket>> GetTickedById(int id);
+        Task<IDataResult<Ticket>> GetTickedById(int ticketId, string senderId , string userRole);
         Task<IDataResult<Ticket>> UpdateTicket(UpdateTicketRequestModel model);
+        Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId);
+        Task<IDataResult<List<Ticket>>> GetTicketsOfHelpdesk(int id);
     }
 }

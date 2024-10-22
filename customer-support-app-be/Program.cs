@@ -5,6 +5,9 @@ using customer_support_app.DAL.Context.DbContext;
 using customer_support_app.SERVICE.Abstract;
 using customer_support_app.SERVICE.Concrete;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +27,27 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
 .AddDefaultTokenProviders();
 #endregion
 
+#region Jwt Settings
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options => 
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
+#endregion
 
 #region DIs
 
@@ -31,16 +55,30 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
 builder.Services.AddScoped<ITicketDal, TicketDal>();
 builder.Services.AddScoped<ICategoryDal, CategoryDal>();
 builder.Services.AddScoped<ICommentDal, CommentDal>();
+builder.Services.AddScoped<ILogActivityDal, LogActivityDal>();
 
 // Service
 builder.Services.AddScoped<ICategoryService,CategoryService>();
 builder.Services.AddScoped<ITicketService,TicketService>();
 builder.Services.AddScoped<ICommentService,CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 #endregion
 
 
+#region CORS
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        builder => builder.WithOrigins("https://localhost:3000", "http://localhost:3000", "https://www.customersupportapp.com")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
+
+#endregion
+
+builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -54,8 +92,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowFrontend");
+
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

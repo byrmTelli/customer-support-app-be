@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace customer_support_app.CORE.ViewModels.User
+namespace customer_support_app.CORE.ViewModels.Role
 {
-    public class UserLoginViewModel
+    public class RoleViewModel
     {
-        public string? Token { get; set; }
+        public string Name { get; set; }
     }
 }

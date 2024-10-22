@@ -12,10 +12,12 @@ namespace customer_support_app.SERVICE.Abstract
 {
     public interface ITicketService
     {
+        Task<IDataResult<List<TicketViewModel>>> GetTickets(string userId);
+        Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId);
         Task<IDataResult<List<TicketViewModel>>> GetTicketsOfUser(int id);
         Task<IResult> CreateTicket(CreateTicketRequestModel model);
         Task<IDataResult<TicketViewModel>> UpdateTicket(UpdateTicketRequestModel model);
-        Task<IDataResult<TicketViewModel>> GetTicketById(int id);
+        Task<IDataResult<TicketViewModel>> GetTicketById(int ticketId,string senderId);
         Task<IResult> DeleteTicket(int id);
     }
 }

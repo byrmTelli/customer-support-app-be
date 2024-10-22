@@ -12,7 +12,9 @@ namespace customer_support_app.CORE.DBModels
         public string Name { get; set; }
         public string Surname { get; set; }
         public string Adress { get; set; }
-        public List<Ticket> Tickets { get; set; }
+        public List<Ticket> UsersTickets { get; set; }
+        public List<Ticket> AssignedTickets { get; set; }
         public List<Comment> Comments { get; set; }
+        public List<ActivityLog> TicketActivities { get; set; }
     }
 }

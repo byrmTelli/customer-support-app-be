@@ -12,5 +12,6 @@ namespace customer_support_app.CORE.ViewModels.Comment
         public int Id { get; set; }
         public string Message { get; set; }
         public UserViewModel Creator { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

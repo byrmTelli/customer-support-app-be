@@ -3,9 +3,11 @@ using customer_support_app.CORE.DBModels;
 using customer_support_app.CORE.RequestModels.User;
 using customer_support_app.CORE.Results.Abstract;
 using customer_support_app.CORE.Results.Concrete;
+using customer_support_app.CORE.ViewModels.User;
 using customer_support_app.SERVICE.Abstract;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using IResult = customer_support_app.CORE.Results.Abstract.IResult;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,16 +28,57 @@ namespace customer_support_app.SERVICE.Concrete
             _mapper = mapper;
         }
 
+        public async Task<IDataResult<UserProfileViewModel>> UpdateUserAsync(UpdateUserRequestModel model)
+
+        {
+            try
+            {
+                var isUserExist = await _userManager.FindByEmailAsync(model.Email);
+                if(isUserExist == null)
+                {
+                    return new ErrorDataResult<UserProfileViewModel>("Bad request.", StatusCodes.Status400BadRequest);
+                }
+
+                isUserExist.UserName = model.Username;
+                isUserExist.Name = model.Name;
+                isUserExist.Surname = model.Surname;
+                isUserExist.Adress = model.Address;
+                isUserExist.PhoneNumber = model.PhoneNumber;
+
+                var result = await _userManager.UpdateAsync(isUserExist);
+                if(!result.Succeeded)
+                {
+                    return new ErrorDataResult<UserProfileViewModel>("Error occured.", StatusCodes.Status500InternalServerError);
+                }
+
+                var roleList = await _userManager.GetRolesAsync(isUserExist);
+                var role = roleList.First();
+
+                var userProfileViewModel = _mapper.Map<UserProfileViewModel>(isUserExist);
+
+                userProfileViewModel.Role = new CORE.ViewModels.Role.RoleViewModel { Name = role};
+
+                return new SuccessDataResult<UserProfileViewModel>(userProfileViewModel, StatusCodes.Status200OK);
+
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<UserProfileViewModel>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+            }
+        }
         public async Task<IResult> RegisterUserAsync(RegisterUserRequestModel model)
         {
             try
             {
-                var result = await _userManager.CreateAsync(_mapper.Map<AppUser>(model), model.Password);
+                var newUser = _mapper.Map<AppUser>(model);
+                var result = await _userManager.CreateAsync(newUser, model.Password);
 
                 if(!result.Succeeded)
                 {
                     return new ErrorResult("Error occured while creating user",StatusCodes.Status500InternalServerError);
                 }
+
+                var assignRoleResult = await _userManager.AddToRoleAsync(newUser,"customer");
 
                 return new SuccessResult("User created successfully.",StatusCodes.Status201Created);
             }
@@ -44,7 +87,6 @@ namespace customer_support_app.SERVICE.Concrete
                 return new ErrorResult("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
             }
         }
-
         public async Task<IResult> ResetPasswordAsync(ResetPasswordRequestModel model)
         {
             try

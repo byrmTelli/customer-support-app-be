@@ -16,6 +16,26 @@ namespace customer_support_app.API.Controllers
             _userService = userService;
         }
 
+        [HttpPut(nameof(UpdateUser))]
+        [ProducesResponseType(typeof(IResult), 200)]
+        [ProducesResponseType(typeof(IResult), 400)]
+        [ProducesResponseType(typeof(IResult), 500)]
+        public async Task<IActionResult> UpdateUser(UpdateUserRequestModel request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+
+                var result = new ErrorResult("Validation failed.", StatusCodes.Status400BadRequest, errors);
+
+                return StatusCode(result.Code, result);
+            }
+
+            var response = await _userService.UpdateUserAsync(request);
+
+            return StatusCode(response.Code, response);
+
+        }
         [HttpPost(nameof(Register))]
         [ProducesResponseType(typeof(IResult), 200)]
         [ProducesResponseType(typeof(IResult), 400)]

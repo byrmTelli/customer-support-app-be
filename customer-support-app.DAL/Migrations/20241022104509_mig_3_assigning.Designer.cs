@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using customer_support_app.DAL.Context.DbContext;
 
@@ -10,9 +11,11 @@ using customer_support_app.DAL.Context.DbContext;
 namespace customer_support_app.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241022104509_mig_3_assigning")]
+    partial class mig_3_assigning
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -122,6 +125,9 @@ namespace customer_support_app.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ActivityType")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -129,17 +135,12 @@ namespace customer_support_app.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TicketId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("UserId")
+                    b.Property<int>("OwnerId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TicketId");
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("ActivityLogs");
                 });
@@ -322,6 +323,9 @@ namespace customer_support_app.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("AssignedToId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("AssignedUserId")
                         .HasColumnType("INTEGER");
 
@@ -359,7 +363,7 @@ namespace customer_support_app.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedUserId");
+                    b.HasIndex("AssignedToId");
 
                     b.HasIndex("CategoryId");
 
@@ -421,21 +425,13 @@ namespace customer_support_app.DAL.Migrations
 
             modelBuilder.Entity("customer_support_app.CORE.DBModels.ActivityLog", b =>
                 {
-                    b.HasOne("customer_support_app.CORE.DBModels.Ticket", "Ticket")
-                        .WithMany("Logs")
-                        .HasForeignKey("TicketId")
+                    b.HasOne("customer_support_app.CORE.DBModels.AppUser", "Owner")
+                        .WithMany("Activities")
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("customer_support_app.CORE.DBModels.AppUser", "User")
-                        .WithMany("TicketActivities")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("User");
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Comment", b =>
@@ -460,8 +456,8 @@ namespace customer_support_app.DAL.Migrations
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
                     b.HasOne("customer_support_app.CORE.DBModels.AppUser", "AssignedTo")
-                        .WithMany("AssignedTickets")
-                        .HasForeignKey("AssignedUserId");
+                        .WithMany()
+                        .HasForeignKey("AssignedToId");
 
                     b.HasOne("customer_support_app.CORE.DBModels.Category", "Category")
                         .WithMany("Tickets")
@@ -470,7 +466,7 @@ namespace customer_support_app.DAL.Migrations
                         .IsRequired();
 
                     b.HasOne("customer_support_app.CORE.DBModels.AppUser", "Creator")
-                        .WithMany("UsersTickets")
+                        .WithMany("Tickets")
                         .HasForeignKey("CreatorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -484,13 +480,11 @@ namespace customer_support_app.DAL.Migrations
 
             modelBuilder.Entity("customer_support_app.CORE.DBModels.AppUser", b =>
                 {
-                    b.Navigation("AssignedTickets");
+                    b.Navigation("Activities");
 
                     b.Navigation("Comments");
 
-                    b.Navigation("TicketActivities");
-
-                    b.Navigation("UsersTickets");
+                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Category", b =>
@@ -501,8 +495,6 @@ namespace customer_support_app.DAL.Migrations
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Logs");
                 });
 #pragma warning restore 612, 618
         }

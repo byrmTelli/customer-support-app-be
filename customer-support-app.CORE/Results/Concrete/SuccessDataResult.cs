@@ -9,7 +9,7 @@ namespace customer_support_app.CORE.Results.Concrete
 {
     public class SuccessDataResult<T> : DataResult<T>
     {
-        public SuccessDataResult(T data, string message, int code) : base(data, false, message, code)
+        public SuccessDataResult(T data, string message, int code) : base(data, true, message, code)
         {
         }
 

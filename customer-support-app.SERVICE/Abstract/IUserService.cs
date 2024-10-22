@@ -1,5 +1,6 @@
 ﻿using customer_support_app.CORE.RequestModels.User;
 using customer_support_app.CORE.Results.Abstract;
+using customer_support_app.CORE.ViewModels.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,6 @@ namespace customer_support_app.SERVICE.Abstract
         Task<IResult> ForgotPasswordAsync(ForgotPasswordRequestModel model);
         // Change this return type as IResult after implementing send mail functionality.
         Task<string> SendPasswordResetEmailAsync(string emailAdress);
+        Task<IDataResult<UserProfileViewModel>> UpdateUserAsync(UpdateUserRequestModel model);
     }
 }

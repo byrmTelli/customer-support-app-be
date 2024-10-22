@@ -25,6 +25,7 @@ namespace customer_support_app.SERVICE.Profiles.Comment
             CreateMap<CORE.DBModels.Comment,CommentViewModel>()
                 .ForMember(dest => dest.Id, src => src.MapFrom(rm => rm.Id))
                 .ForMember(dest => dest.Message, src => src.MapFrom(rm => rm.Message))
+                .ForMember(dest => dest.CreatedAt, src => src.MapFrom(rm => rm.CreatedAt))
                 .ForMember(dest => dest.Creator, src => src.MapFrom(rm => rm.Creator));
         }
     }
