@@ -12,7 +12,7 @@ namespace customer_support_app.CORE.RequestModels.Ticket
         public int Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
-        public TicketStatus Status { get; set; }
+        public string Status { get; set; }
         public int CategoryId { get; set; }
     }
 }

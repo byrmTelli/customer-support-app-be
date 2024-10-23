@@ -11,6 +11,9 @@ namespace customer_support_app.SERVICE.Abstract
 {
     public interface IUserService
     {
+        Task<IDataResult<List<CustomerProfileViewModel>>> GetCustomersForAdminPanelAsync();
+        Task<IDataResult<List<UserProfileViewModel>>> GetHelpDesksForAdminPanelAsync();
+        Task<IDataResult<List<HelpdeskViewModel>>> GetHelpdesksAsync();
         Task<IResult> RegisterUserAsync(RegisterUserRequestModel model);
         Task<IResult> ResetPasswordAsync(ResetPasswordRequestModel model);
         Task<IResult> ForgotPasswordAsync(ForgotPasswordRequestModel model);

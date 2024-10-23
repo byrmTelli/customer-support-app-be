@@ -1,4 +1,5 @@
-﻿using customer_support_app.CORE.DBModels.BaseModels;
+﻿using customer_support_app.CORE.Constants;
+using customer_support_app.CORE.DBModels.BaseModels;
 using customer_support_app.CORE.Enums;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace customer_support_app.CORE.DBModels
     {
         public string Title { get; set; }
         public string Content { get; set; }
-        public TicketStatus Status { get; set; } = TicketStatus.Pending;
+        public string Status { get; set; } = TicketStatus.Pending;
         public int? AssignedUserId { get; set; }
         public AppUser? AssignedTo { get; set; }
         public int CategoryId { get; set; }
@@ -20,7 +21,7 @@ namespace customer_support_app.CORE.DBModels
         public bool IsPublished { get; set; } = false;
         public int CreatorId { get; set; }
         public AppUser Creator { get; set; }
-        public ICollection<Comment> Comments { get; set; }
+        public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<ActivityLog> Activities { get; set; }
     }
 }

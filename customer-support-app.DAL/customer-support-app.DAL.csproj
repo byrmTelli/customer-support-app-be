@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Utils\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
@@ -22,6 +23,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\customer-support-app.CORE\customer-support-app.CORE.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\Images\admin-image.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Images\customer-image.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Images\helpdesk-image.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

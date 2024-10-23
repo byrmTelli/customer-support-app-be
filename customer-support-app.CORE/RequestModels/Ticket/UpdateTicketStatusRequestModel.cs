@@ -10,6 +10,6 @@ namespace customer_support_app.CORE.RequestModels.Ticket
     public class UpdateTicketStatusRequestModel
     {
         public int Id { get; set; }
-        public TicketStatus Status { get; set; }
+        public string Status { get; set; }
     }
 }

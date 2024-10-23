@@ -12,7 +12,7 @@ namespace customer_support_app.SERVICE.Abstract
 {
     public interface ITicketService
     {
-        Task<IDataResult<List<TicketViewModel>>> GetTickets(string userId);
+        Task<IDataResult<List<AdminPanelTicketsTableViewModel>>> GetAllTicketForAdmin();
         Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId);
         Task<IDataResult<List<TicketViewModel>>> GetTicketsOfUser(int id);
         Task<IResult> CreateTicket(CreateTicketRequestModel model);

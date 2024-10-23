@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace customer_support_app.CORE.ViewModels.User
 {
-    public class CustomerProfileViewModel
+    public class UserProfileViewModel
     {
         public int Id { get; set; }
         public string Username { get; set; }
@@ -17,6 +17,5 @@ namespace customer_support_app.CORE.ViewModels.User
         public string Adress { get; set; }
         public DateTime CreatedAt { get; set; }
         public RoleViewModel Role { get; set; }
-        public string IsApproved { get; set; }
     }
 }

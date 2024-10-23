@@ -20,4 +20,16 @@
     <ProjectReference Include="..\customer-support-app.SERVICE\customer-support-app.SERVICE.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Assets\Images\admin-image.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Images\customer-image.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Images\helpdesk-image.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

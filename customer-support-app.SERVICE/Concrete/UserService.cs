@@ -13,21 +13,62 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using customer_support_app.DAL.Abstract;
 
 namespace customer_support_app.SERVICE.Concrete
 {
     public class UserService:IUserService
     {
+        private readonly IUserDal _userDal;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly IMapper _mapper;
-        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager,IMapper mapper)
+        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager,IMapper mapper,IUserDal userDal)
         {
+            _userDal = userDal;
             _userManager = userManager;
             _roleManager = roleManager; 
             _mapper = mapper;
         }
+        public async Task<IDataResult<List<CustomerProfileViewModel>>> GetCustomersForAdminPanelAsync()
+        {
+            try
+            {
+                var result = await _userDal.GetCustomersForAdminPanelAsync();
 
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<List<CustomerProfileViewModel>>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+            }
+        }
+        public async Task<IDataResult<List<UserProfileViewModel>>> GetHelpDesksForAdminPanelAsync()
+        {
+            try
+            {
+                var result = await _userDal.GetHelpDesksForAdminPanelAsync();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<List<UserProfileViewModel>>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+            }
+        }
+        public async Task<IDataResult<List<HelpdeskViewModel>>> GetHelpdesksAsync()
+        {
+            try
+            {
+                var result = await _userDal.GetHelpdesksAsync();
+
+                return result;
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<List<HelpdeskViewModel>>("Something went wrong. Please check the application logs.",StatusCodes.Status500InternalServerError);
+            }
+        }
         public async Task<IDataResult<UserProfileViewModel>> UpdateUserAsync(UpdateUserRequestModel model)
 
         {

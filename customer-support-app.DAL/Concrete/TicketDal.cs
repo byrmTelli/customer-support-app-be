@@ -7,6 +7,9 @@ using customer_support_app.CORE.ViewModels.Ticket;
 using customer_support_app.DAL.Abstract;
 using customer_support_app.DAL.Context.DbContext;
 using Microsoft.AspNetCore.Http;
+using customer_support_app.CORE.ViewModels.User;
+using customer_support_app.CORE.ViewModels.Category;
+using customer_support_app.CORE.ViewModels.Role;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -14,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Http.Headers;
 
 namespace customer_support_app.DAL.Concrete
 {
@@ -23,6 +27,67 @@ namespace customer_support_app.DAL.Concrete
         public TicketDal(AppDbContext context) : base(context)
         {
             _context = context;
+        }
+        public async Task<IDataResult<List<AdminPanelTicketsTableViewModel>>> GetAllTicketsForAdmin()
+        {
+            try
+            {
+               
+                var ticketsWithCategoryQuery = from ticket in _context.Tickets
+                                               join category in _context.Categories on ticket.CategoryId equals category.Id
+                                               select ticket;
+
+                var usersWithRolesQuery = from userRoles in _context.UserRoles
+                                          join user in _context.Users on userRoles.UserId equals user.Id
+                                          join role in _context.Roles on userRoles.RoleId equals role.Id
+                                          select new { user , role };
+
+                var combinedQuery = from ticket in ticketsWithCategoryQuery
+                                    join creator in usersWithRolesQuery on ticket.CreatorId equals creator.user.Id
+                                    join assignedUser in usersWithRolesQuery on ticket.AssignedUserId equals assignedUser.user.Id into assignedUserGroup
+                                    from assignedUser in assignedUserGroup.DefaultIfEmpty()
+                                    select new AdminPanelTicketsTableViewModel
+                                    {
+                                        Id = ticket.Id,
+                                        Title = ticket.Title,
+                                        Content = ticket.Content,
+                                        CreatedAt = ticket.CreatedAt,
+                                        Status = ticket.Status,
+                                        Category = new CategoryViewModel
+                                        {
+                                            Id = ticket.Category.Id,
+                                            Name = ticket.Category.Name,
+                                        },
+                                        Creator = new CreatorViewModel
+                                        {
+                                            Id = creator.user.Id,
+                                            Username = creator.user.UserName,
+                                            FullName = $"{creator.user.Name} {creator.user.Surname}"
+                                        },
+                                        AssignedTo = assignedUser.user == null ? null : new HelpdeskViewModel
+                                        {
+                                            Id = assignedUser.user.Id,
+                                            FullName = $"{assignedUser.user.Name} {assignedUser.user.Surname}",
+                                            Role = new RoleViewModel
+                                            {
+                                                Name = assignedUser.role.Name
+                                            }
+                                        },
+                                    };
+
+
+
+
+
+
+                var result = await combinedQuery.ToListAsync();
+
+                return new SuccessDataResult<List<AdminPanelTicketsTableViewModel>>(result, StatusCodes.Status200OK);
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<List<AdminPanelTicketsTableViewModel>>("Something went wrong.", StatusCodes.Status500InternalServerError);
+            }
         }
         public async Task<IDataResult<List<Ticket>>> GetTicketsOfHelpdesk(int userId)
         {

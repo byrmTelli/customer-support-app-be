@@ -27,54 +27,21 @@ namespace customer_support_app.SERVICE.Concrete
             _mapper = mapper;
             _activityLogDal = activityLogDal;
         }
-        public async Task<IDataResult<List<TicketViewModel>>> GetTickets(string userId)
+        public async Task<IDataResult<List<AdminPanelTicketsTableViewModel>>> GetAllTicketForAdmin()
         {
             try
             {
-                // Is user exist ? 
-                var isUserExist = await _userManager.FindByIdAsync(userId);
-                if (isUserExist == null)
-                {
-                    return new ErrorDataResult<List<TicketViewModel>>("Bad request.",StatusCodes.Status400BadRequest);   
-                }
-                // Check user's role status
-                var userRoleQuery = await _userManager.GetRolesAsync(isUserExist);
-                var userRole = userRoleQuery.First();
-                if (String.IsNullOrEmpty(userRole))
-                {
-                    return new ErrorDataResult<List<TicketViewModel>>("Error occured.", StatusCodes.Status500InternalServerError);
-                }
-                // Case Customer
-                if(userRole == "customer")
-                {
-                    var customerResult = await _ticketDal.GetTicketsOfUser(isUserExist.Id);
-                    var customerTicketListVM = _mapper.Map<List<TicketViewModel>>(customerResult.Data);
+
+                var result = await _ticketDal.GetAllTicketsForAdmin();
 
 
-                    return new SuccessDataResult<List<TicketViewModel>>(customerTicketListVM, customerResult.Code);
-                }
-                // Case helpdesk
-
-                if(userRole == "helpdesk")
-                {
-                    var hdResult = await _ticketDal.GetTicketsOfHelpdesk(isUserExist.Id);
-                    var hdTicketListVM = _mapper.Map<List<TicketViewModel>>(hdResult.Data);
-
-
-                    return new SuccessDataResult<List<TicketViewModel>>(hdTicketListVM, hdResult.Code);
-                }
-
-                var result = await _ticketDal.GetListAsync();
-                var ticketListVM = _mapper.Map<List<TicketViewModel>>(result);
-
-
-                return new SuccessDataResult<List<TicketViewModel>>(ticketListVM, StatusCodes.Status200OK);
+                return result;
 
 
             }
             catch(Exception ex)
             {
-                return new ErrorDataResult<List<TicketViewModel>>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+                return new ErrorDataResult<List<AdminPanelTicketsTableViewModel>>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
             }
         }
         public async Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId)

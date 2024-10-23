@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using IResult = customer_support_app.CORE.Results.Abstract.IResult;
+using customer_support_app.CORE.Constants;
 
 namespace customer_support_app.API.Controllers
 {
@@ -24,28 +25,27 @@ namespace customer_support_app.API.Controllers
         {
             _ticketService = ticketService;
         }
-
-        [CustomAuthorization("admin", "helpdesk","customer")]
-        [HttpGet(nameof(GetTickets))]
-        [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 200)]
-        [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 400)]
-        [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 500)]
-        public async Task<IActionResult> GetTickets()
+        [CustomAuthorization(RoleTypes.Admin)]
+        [HttpGet(nameof(GetAllTicketForAdmin))]
+        [ProducesResponseType(typeof(IDataResult<List<AdminPanelTicketsTableViewModel>>), 200)]
+        [ProducesResponseType(typeof(IDataResult<List<AdminPanelTicketsTableViewModel>>), 400)]
+        [ProducesResponseType(typeof(IDataResult<List<AdminPanelTicketsTableViewModel>>), 500)]
+        public async Task<IActionResult> GetAllTicketForAdmin()
         {
-            var userId = User.FindFirstValue("UserID");
-            if (string.IsNullOrEmpty(userId))
-            {
-                var result = new ErrorResult("Bad request.", StatusCodes.Status400BadRequest);
+            //var userId = User.FindFirstValue("UserID");
+            //if (string.IsNullOrEmpty(userId))
+            //{
+            //    var result = new ErrorResult("Bad request.", StatusCodes.Status400BadRequest);
 
-                return StatusCode(result.Code, result);
-            }
+            //    return StatusCode(result.Code, result);
+            //}
 
-            var response = await _ticketService.GetTickets(userId);
+            var response = await _ticketService.GetAllTicketForAdmin();
 
             return StatusCode(response.Code, response);
         }
 
-        [CustomAuthorization("admin", "helpdesk")]
+        [CustomAuthorization(RoleTypes.Admin, RoleTypes.Helpdesk)]
         [HttpPost(nameof(AssignTicketToMe))]
         [ProducesResponseType(typeof(IResult), 200)]
         [ProducesResponseType(typeof(IResult), 400)]
@@ -65,7 +65,7 @@ namespace customer_support_app.API.Controllers
             return StatusCode(response.Code, response);
         }
 
-        [CustomAuthorization("admin")]
+        [CustomAuthorization(RoleTypes.Admin)]
         [HttpPost(nameof(AssignTicketToHelpdesk))]
         [ProducesResponseType(typeof(IResult), 200)]
         [ProducesResponseType(typeof(IResult), 400)]
@@ -78,7 +78,7 @@ namespace customer_support_app.API.Controllers
             return StatusCode(response.Code, response);
 
         }
-        [CustomAuthorization("admin")]
+        [CustomAuthorization(RoleTypes.Admin)]
         [HttpGet(nameof(GetTicketsOfUser))]
         [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 200)]
         [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 500)]
@@ -105,7 +105,7 @@ namespace customer_support_app.API.Controllers
 
             return StatusCode(response.Code, response);
         }
-        [CustomAuthorization("admin", "helpdesk", "customer")]
+        [CustomAuthorization(RoleTypes.Admin, RoleTypes.Helpdesk, RoleTypes.Customer)]
         [HttpGet(nameof(GetTicketById))]
         [ProducesResponseType(typeof(IDataResult<TicketViewModel>), 200)]
         [ProducesResponseType(typeof(IDataResult<TicketViewModel>), 400)]

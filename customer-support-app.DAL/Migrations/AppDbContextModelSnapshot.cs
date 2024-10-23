@@ -188,11 +188,20 @@ namespace customer_support_app.DAL.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsApproved")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("LockoutEnabled")
@@ -221,6 +230,9 @@ namespace customer_support_app.DAL.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("ProfileImage")
+                        .HasColumnType("BLOB");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
@@ -344,8 +356,9 @@ namespace customer_support_app.DAL.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -422,7 +435,7 @@ namespace customer_support_app.DAL.Migrations
             modelBuilder.Entity("customer_support_app.CORE.DBModels.ActivityLog", b =>
                 {
                     b.HasOne("customer_support_app.CORE.DBModels.Ticket", "Ticket")
-                        .WithMany("Logs")
+                        .WithMany("Activities")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -500,9 +513,9 @@ namespace customer_support_app.DAL.Migrations
 
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
-                    b.Navigation("Comments");
+                    b.Navigation("Activities");
 
-                    b.Navigation("Logs");
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

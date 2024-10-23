@@ -1,5 +1,9 @@
-﻿using customer_support_app.CORE.RequestModels.User;
+﻿using customer_support_app.API.Services.Auth;
+using customer_support_app.CORE.Constants;
+using customer_support_app.CORE.RequestModels.User;
+using customer_support_app.CORE.Results.Abstract;
 using customer_support_app.CORE.Results.Concrete;
+using customer_support_app.CORE.ViewModels.User;
 using customer_support_app.SERVICE.Abstract;
 using Microsoft.AspNetCore.Mvc;
 using IResult = customer_support_app.CORE.Results.Abstract.IResult;
@@ -14,6 +18,36 @@ namespace customer_support_app.API.Controllers
         public UserController(IUserService userService)
         {
             _userService = userService;
+        }
+
+        [CustomAuthorization(RoleTypes.Admin)]
+        [HttpGet(nameof(GetCustomerProfileListForAdminPanel))]
+        [ProducesResponseType(typeof(IDataResult<List<CustomerProfileViewModel>>), 200)]
+        [ProducesResponseType(typeof(IDataResult<List<CustomerProfileViewModel>>), 500)]
+        public async Task<IActionResult> GetCustomerProfileListForAdminPanel()
+        {
+            var response = await _userService.GetCustomersForAdminPanelAsync();
+            return StatusCode(response.Code, response);
+        }
+        [CustomAuthorization(RoleTypes.Admin)]
+        [HttpGet(nameof(GetHeldesksProfileListForAdminPanel))]
+        [ProducesResponseType(typeof(IDataResult<List<UserProfileViewModel>>), 200)]
+        [ProducesResponseType(typeof(IDataResult<List<UserProfileViewModel>>), 500)]
+        public async Task<IActionResult> GetHeldesksProfileListForAdminPanel()
+        {
+            var response = await _userService.GetHelpDesksForAdminPanelAsync();
+            return StatusCode(response.Code, response);
+        }
+        [CustomAuthorization(RoleTypes.Admin)]
+        [HttpGet(nameof(GetHelpdesks))]
+        [ProducesResponseType(typeof(IDataResult<List<HelpdeskViewModel>>), 200)]
+        [ProducesResponseType(typeof(IDataResult<List<HelpdeskViewModel>>), 400)]
+        [ProducesResponseType(typeof(IDataResult<List<HelpdeskViewModel>>), 500)]
+        public async Task<IActionResult> GetHelpdesks()
+        {
+            var response  = await _userService.GetHelpdesksAsync();
+
+            return StatusCode(response.Code, response);
         }
 
         [HttpPut(nameof(UpdateUser))]

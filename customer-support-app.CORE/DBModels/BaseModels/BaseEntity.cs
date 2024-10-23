@@ -9,7 +9,7 @@ namespace customer_support_app.CORE.DBModels.BaseModels
     public class BaseEntity
     {
         public int Id { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.Now.AddDays(-60);
         public string Creator { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }

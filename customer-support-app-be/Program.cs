@@ -55,6 +55,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<ITicketDal, TicketDal>();
 builder.Services.AddScoped<ICategoryDal, CategoryDal>();
 builder.Services.AddScoped<ICommentDal, CommentDal>();
+builder.Services.AddScoped<IUserDal, UserDal>();
 builder.Services.AddScoped<ILogActivityDal, LogActivityDal>();
 
 // Service

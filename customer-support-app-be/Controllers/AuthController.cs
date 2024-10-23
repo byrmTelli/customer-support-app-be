@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using customer_support_app.API.Services.Auth;
+using customer_support_app.CORE.Constants;
 
 namespace customer_support_app.API.Controllers
 {
@@ -21,7 +22,7 @@ namespace customer_support_app.API.Controllers
         {
             _authService = authService;
         }
-        [CustomAuthorization("admin","helpdesk","customer")]
+        [CustomAuthorization(RoleTypes.Admin,RoleTypes.Customer,RoleTypes.Helpdesk)]
         [HttpGet(nameof(GetUserProfile))]
         [ProducesResponseType(typeof(IDataResult<UserProfileViewModel>), 200)]
         [ProducesResponseType(typeof(IDataResult<UserProfileViewModel>), 400)]
