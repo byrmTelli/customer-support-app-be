@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
+using customer_support_app.CORE.Constants;
 
 namespace customer_support_app.DAL.Concrete
 {
@@ -156,12 +157,12 @@ namespace customer_support_app.DAL.Concrete
                     .FirstOrDefaultAsync();
 
 
-                if(userRole == "customer" && isTicketExist.CreatorId != senderIdInt)
+                if(userRole == RoleTypes.Customer && isTicketExist.CreatorId != senderIdInt)
                 {
                     return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
-                if(userRole == "helpdesk" && isTicketExist.AssignedUserId != senderIdInt)
+                if(userRole == RoleTypes.Helpdesk && isTicketExist.AssignedUserId != senderIdInt)
                 {
                     return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
                 }

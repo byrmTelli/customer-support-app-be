@@ -50,6 +50,12 @@ namespace customer_support_app.SERVICE.Concrete
                 var userProfileVM = _mapper.Map<UserProfileViewModel>(isUserExist);
                 userProfileVM.Role = new CORE.ViewModels.Role.RoleViewModel { Name = role };
 
+                if(isUserExist.ProfileImage != null)
+                {
+                    string userProfileImage = ConvertImageToBase64String(isUserExist.ProfileImage);
+                    userProfileVM.ProfileImage = userProfileImage;
+                }
+
 
                 return new SuccessDataResult<UserProfileViewModel>(userProfileVM, StatusCodes.Status200OK);
             }
@@ -65,7 +71,7 @@ namespace customer_support_app.SERVICE.Concrete
                 var isUserExist = await _userManager.FindByNameAsync(model.Username);
                 if (isUserExist == null)
                 {
-                    return new ErrorDataResult<UserLoginViewModel>("Bad request.", StatusCodes.Status400BadRequest);
+                    return new ErrorDataResult<UserLoginViewModel>("Username or password wrong.", StatusCodes.Status401Unauthorized);
                 }
 
                 var loginStatus = await _userManager.CheckPasswordAsync(isUserExist, model.Password);
@@ -84,7 +90,6 @@ namespace customer_support_app.SERVICE.Concrete
                 return new ErrorDataResult<UserLoginViewModel>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
             }
         }
-
         public async Task<string> GenerateTokenAsync(AppUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -111,6 +116,13 @@ namespace customer_support_app.SERVICE.Concrete
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        private static string ConvertImageToBase64String(byte[] imageBytes)
+        {
+            if (imageBytes == null || imageBytes.Length == 0)
+                return null;
+
+            return $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
         }
     }
 

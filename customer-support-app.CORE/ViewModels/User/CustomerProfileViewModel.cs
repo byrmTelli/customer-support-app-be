@@ -17,5 +17,6 @@ namespace customer_support_app.CORE.ViewModels.User
         public string Adress { get; set; }
         public DateTime CreatedAt { get; set; }
         public RoleViewModel Role { get; set; }
+        public string ProfileImage { get; set; }
     }
 }
