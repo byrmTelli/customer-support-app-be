@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -26,9 +27,9 @@ namespace customer_support_app.CORE.RequestModels.User
         [EmailAddress(ErrorMessage = "Invalid email adress.")]
         public string Email { get; set; }
 
-        [Phone(ErrorMessage = "Invalid phone number.")]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         [StringLength(50, MinimumLength = 3, ErrorMessage = "Adress field length must be between 6 - 50 character.")]
         public string Address { get; set; }
+        public string ProfileImage { get; set; }
     }
 }

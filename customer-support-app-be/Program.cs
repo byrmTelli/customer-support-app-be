@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using customer_support_app.SERVICE.Utilities.Abstract;
+using customer_support_app.SERVICE.Utilities.Concrete;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +59,8 @@ builder.Services.AddScoped<ICategoryDal, CategoryDal>();
 builder.Services.AddScoped<ICommentDal, CommentDal>();
 builder.Services.AddScoped<IUserDal, UserDal>();
 builder.Services.AddScoped<ILogActivityDal, LogActivityDal>();
+builder.Services.AddScoped<IFileDal,FileDal>();
+builder.Services.AddScoped<IAdminDal, AdminDal>();
 
 // Service
 builder.Services.AddScoped<ICategoryService,CategoryService>();
@@ -64,6 +68,10 @@ builder.Services.AddScoped<ITicketService,TicketService>();
 builder.Services.AddScoped<ICommentService,CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+
+// Utils
+builder.Services.AddScoped<IUserInfo, UserInfo>();
 #endregion
 
 
@@ -79,6 +87,7 @@ builder.Services.AddCors(options =>
 
 #endregion
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

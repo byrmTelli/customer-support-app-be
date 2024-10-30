@@ -19,7 +19,28 @@ namespace customer_support_app.API.Controllers
         {
             _userService = userService;
         }
+        [CustomAuthorization(RoleTypes.Admin)]
+        [HttpPost(nameof(ApproveUser))]
+        [ProducesResponseType(typeof(IResult),200)]
+        [ProducesResponseType(typeof(IResult), 400)]
+        [ProducesResponseType(typeof(IResult), 500)]
+        public async Task<IActionResult> ApproveUser(int id)
+        {
+            var response = await _userService.ApproveUser(id);
 
+            return StatusCode(response.Code, response);
+        }
+        [CustomAuthorization(RoleTypes.Admin,RoleTypes.Helpdesk)]
+        [HttpGet(nameof(GetUserProfileForAdminPanel))]
+        [ProducesResponseType(typeof(IDataResult<UserProfileForAdminPanelViewModel>), 200)]
+        [ProducesResponseType(typeof(IDataResult<UserProfileForAdminPanelViewModel>), 400)]
+        [ProducesResponseType(typeof(IDataResult<UserProfileForAdminPanelViewModel>), 500)]
+        public async Task<IActionResult> GetUserProfileForAdminPanel(int id)
+        {
+            var response = await _userService.GetUserProfileForAdminPanelAsync(id);
+
+            return StatusCode(response.Code, response);
+        }
         [CustomAuthorization(RoleTypes.Admin)]
         [HttpGet(nameof(GetCustomerProfileListForAdminPanel))]
         [ProducesResponseType(typeof(IDataResult<List<CustomerProfileViewModel>>), 200)]
@@ -49,7 +70,7 @@ namespace customer_support_app.API.Controllers
 
             return StatusCode(response.Code, response);
         }
-
+        [CustomAuthorization(RoleTypes.Admin,RoleTypes.Customer,RoleTypes.Helpdesk)]
         [HttpPut(nameof(UpdateUser))]
         [ProducesResponseType(typeof(IResult), 200)]
         [ProducesResponseType(typeof(IResult), 400)]

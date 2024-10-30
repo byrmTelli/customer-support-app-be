@@ -3,6 +3,7 @@ using customer_support_app.CORE.DBModels;
 using customer_support_app.CORE.RequestModels.User;
 using customer_support_app.CORE.Results.Abstract;
 using customer_support_app.CORE.Results.Concrete;
+using customer_support_app.CORE.Utilities;
 using customer_support_app.CORE.ViewModels.User;
 using customer_support_app.SERVICE.Abstract;
 using Microsoft.AspNetCore.Http;
@@ -52,7 +53,7 @@ namespace customer_support_app.SERVICE.Concrete
 
                 if(isUserExist.ProfileImage != null)
                 {
-                    string userProfileImage = ConvertImageToBase64String(isUserExist.ProfileImage);
+                    string userProfileImage = ImageHelper.ConvertImageToBase64String(isUserExist.ProfileImage);
                     userProfileVM.ProfileImage = userProfileImage;
                 }
 
@@ -116,13 +117,6 @@ namespace customer_support_app.SERVICE.Concrete
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-        private static string ConvertImageToBase64String(byte[] imageBytes)
-        {
-            if (imageBytes == null || imageBytes.Length == 0)
-                return null;
-
-            return $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
         }
     }
 

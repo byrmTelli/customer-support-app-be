@@ -12,8 +12,10 @@ namespace customer_support_app.DAL.Abstract
 {
     public interface IUserDal:IEntityRepository<AppUser>
     {
+        Task<IResult> ApproveUser(int userId);
         Task<IDataResult<List<HelpdeskViewModel>>>GetHelpdesksAsync();
         Task<IDataResult<List<UserProfileViewModel>>> GetHelpDesksForAdminPanelAsync();
         Task<IDataResult<List<CustomerProfileViewModel>>> GetCustomersForAdminPanelAsync();
+        Task<IDataResult<UserProfileForAdminPanelViewModel>> GetUserProfileForAdminPanelAsync(int id);
     }
 }

@@ -17,7 +17,7 @@ namespace customer_support_app.DAL.Context.DbContext
     {
         public AppDbContext()
         {
-            
+
         }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -33,6 +33,7 @@ namespace customer_support_app.DAL.Context.DbContext
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<FileAttachment> FileAttechments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -77,6 +78,11 @@ namespace customer_support_app.DAL.Context.DbContext
                 .WithOne(activity => activity.Ticket)
                 .HasForeignKey(activity => activity.TicketId);
 
+            modelBuilder.Entity<Ticket>()
+                .HasMany(ticket => ticket.Attachments)
+                .WithOne(attachment => attachment.Ticket)
+                .HasForeignKey(attachment => attachment.TicketId);
+
             #endregion
 
             #region Query Filter
@@ -91,7 +97,7 @@ namespace customer_support_app.DAL.Context.DbContext
         #region Seeder Functions
 
         #region Profile Image Paths
-        static string  baseDirectory = Directory.GetCurrentDirectory();
+        static string baseDirectory = Directory.GetCurrentDirectory();
 
         static string adminImage = Path.Combine(baseDirectory, "Assets", "Images", "admin-image.png");
         static string helpDeskImage = Path.Combine(baseDirectory, "Assets", "Images", "helpdesk-image.png");
@@ -154,7 +160,7 @@ namespace customer_support_app.DAL.Context.DbContext
                     Name = $"Helpdesk{i}",
                     Surname = "User",
                     Adress = $"Helpdesk Address {i}",
-                    IsApproved = true ,
+                    IsApproved = true,
                     ProfileImage = hdImageByte
                 };
 
@@ -209,42 +215,44 @@ namespace customer_support_app.DAL.Context.DbContext
     {
         // Creator 1
         new Ticket{
-            Id =1, 
-            Title = "Issue with Electronics", 
-            Content= "Problem with my home electronics.", 
-            Status= TicketStatus.Completed, 
-            CategoryId = 1, 
-            IsPublished = true, 
+            Id =1,
+            Title = "Issue with Electronics",
+            Content= "Problem with my home electronics.",
+            Status= TicketStatus.Completed,
+            ClosedAt= DateTime.Now.AddDays(-31),
+            CategoryId = 1,
+            IsPublished = true,
             CreatorId = 5,
             AssignedUserId = 2,
         },
         new Ticket{
-            Id =2, 
-            Title = "Device malfunction", 
-            Content= "My personal device is not working.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 6, 
-            IsPublished = true, 
+            Id =2,
+            Title = "Device malfunction",
+            Content= "My personal device is not working.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 6,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 4,
         },
         new Ticket{
-            Id =3, 
-            Title = "Fashion query", 
-            Content= "I have a question about fashion.", 
-            Status= TicketStatus.Completed, 
-            CategoryId = 3, 
-            IsPublished = true, 
+            Id =3,
+            Title = "Fashion query",
+            Content= "I have a question about fashion.",
+            Status= TicketStatus.Completed,
+            ClosedAt= DateTime.Now.AddDays(-21),
+            CategoryId = 3,
+            IsPublished = true,
             CreatorId = 6,
             AssignedUserId= 4,
             UpdatedAt = DateTime.Now.AddDays(-5),
         },
         new Ticket{
-            Id = 4, 
-            Title = "Sports equipment issue", 
-            Content= "Need assistance with sports gear.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 4, 
+            Id = 4,
+            Title = "Sports equipment issue",
+            Content= "Need assistance with sports gear.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 4,
             IsPublished = true,
             CreatorId = 1,
             AssignedUserId = 2,
@@ -252,43 +260,44 @@ namespace customer_support_app.DAL.Context.DbContext
 
         // Creator 2
         new Ticket{
-            Id =5, 
-            Title = "Book availability", 
-            Content= "Looking for a specific book.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 5, 
-            IsPublished = true, 
+            Id =5,
+            Title = "Book availability",
+            Content= "Looking for a specific book.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 5,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 2,
         },
         new Ticket{
-            Id =6, 
-            Title = "Toy malfunction", 
-            Content= "Toy is not working properly.", 
-            Status= TicketStatus.Completed, 
-            CategoryId = 6, 
-            IsPublished = true, 
+            Id =6,
+            Title = "Toy malfunction",
+            Content= "Toy is not working properly.",
+            Status= TicketStatus.Completed,
+            ClosedAt= DateTime.Now.AddDays(-13),
+            CategoryId = 6,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 6,
             UpdatedAt = DateTime.Now.AddDays(-2),
         },
         new Ticket{
-            Id =7, 
-            Title = "Car issue", 
-            Content= "Problem with my car.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 7, 
-            IsPublished = true, 
+            Id =7,
+            Title = "Car issue",
+            Content= "Problem with my car.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 7,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 3,
         },
         new Ticket{
-            Id =8, 
-            Title = "Beauty product inquiry", 
-            Content= "Question about beauty products.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 8, 
-            IsPublished = true, 
+            Id =8,
+            Title = "Beauty product inquiry",
+            Content= "Question about beauty products.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 8,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 2,
         },
@@ -296,44 +305,44 @@ namespace customer_support_app.DAL.Context.DbContext
         // Creator 3
         new Ticket
         {
-            Id =9, 
-            Title = "Furniture damage", 
-            Content= "My furniture is damaged.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 9, 
-            IsPublished = true, 
+            Id =9,
+            Title = "Furniture damage",
+            Content= "My furniture is damaged.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 9,
+            IsPublished = true,
             CreatorId = 3,
             AssignedUserId = 3,
         },
         new Ticket
         {
-            Id = 10, 
-            Title = "Kitchen appliance malfunction", 
-            Content= "Problem with my kitchen appliance.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 10, 
-            IsPublished = true, 
+            Id = 10,
+            Title = "Kitchen appliance malfunction",
+            Content= "Problem with my kitchen appliance.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 10,
+            IsPublished = true,
             CreatorId = 9,
             AssignedUserId = 2,
         },
         new Ticket{
-            Id = 11, 
-            Title = "Electronics warranty", 
-            Content= "Need warranty details for electronics.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 1, 
-            IsPublished = true, 
+            Id = 11,
+            Title = "Electronics warranty",
+            Content= "Need warranty details for electronics.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 1,
+            IsPublished = true,
             CreatorId = 9,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id = 12, 
-            Title = "Device return request", 
-            Content= "Want to return my device.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 2, 
-            IsPublished = true, 
+            Id = 12,
+            Title = "Device return request",
+            Content= "Want to return my device.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 2,
+            IsPublished = true,
             CreatorId = 5,
             AssignedUserId = 2,
         },
@@ -341,137 +350,139 @@ namespace customer_support_app.DAL.Context.DbContext
         // Creator 4
         new Ticket
         {
-            Id =13, 
-            Title = "Fashion product exchange", 
-            Content= "Want to exchange a fashion item.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 3, 
-            IsPublished = true, 
+            Id =13,
+            Title = "Fashion product exchange",
+            Content= "Want to exchange a fashion item.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 3,
+            IsPublished = true,
             CreatorId = 9,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id =14, 
-            Title = "Sports equipment refund", 
-            Content= "Requesting refund for sports gear.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 4, 
-            IsPublished = true, 
+            Id =14,
+            Title = "Sports equipment refund",
+            Content= "Requesting refund for sports gear.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 4,
+            IsPublished = true,
             CreatorId = 5,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id =15, 
-            Title = "Book delivery delay", 
-            Content= "My book delivery is delayed.", 
-            Status= TicketStatus.Completed, 
-            CategoryId = 5, 
-            IsPublished = true, 
+            Id =15,
+            Title = "Book delivery delay",
+            Content= "My book delivery is delayed.",
+            Status= TicketStatus.Completed,
+            ClosedAt= DateTime.Now.AddDays(-41),
+            CategoryId = 5,
+            IsPublished = true,
             CreatorId = 5,
             AssignedUserId = 4,
             UpdatedAt = DateTime.Now.AddDays(-5),
         },
         new Ticket
         {
-            Id =16, 
-            Title = "Toy quality issue", 
-            Content= "Concern about toy quality.", 
-            Status= TicketStatus.Pending, 
-            CategoryId = 6, 
-            IsPublished = true, 
+            Id =16,
+            Title = "Toy quality issue",
+            Content= "Concern about toy quality.",
+            Status= TicketStatus.Pending,
+            CategoryId = 6,
+            IsPublished = true,
             CreatorId = 6
         },
 
         // Creator 5
         new Ticket
         {
-            Id =17, 
-            Title = "Car service inquiry", 
-            Content= "Question about car servicing.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 7, 
-            IsPublished = true, 
+            Id =17,
+            Title = "Car service inquiry",
+            Content= "Question about car servicing.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 7,
+            IsPublished = true,
             CreatorId = 5,
             AssignedUserId = 3,
         },
         new Ticket
         {
-            Id =18, 
-            Title = "Beauty product refund", 
-            Content= "Requesting refund for beauty product.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 8, 
-            IsPublished = true, 
+            Id =18,
+            Title = "Beauty product refund",
+            Content= "Requesting refund for beauty product.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 8,
+            IsPublished = true,
             CreatorId = 5,
             AssignedUserId = 4,
         },
         new Ticket
         {
-            Id =19, 
-            Title = "Furniture assembly help", 
-            Content= "Need help assembling furniture.", 
-            Status= TicketStatus.Completed, 
-            CategoryId = 9, 
-            IsPublished = true, 
+            Id =19,
+            Title = "Furniture assembly help",
+            Content= "Need help assembling furniture.",
+            Status= TicketStatus.Completed,
+            ClosedAt= DateTime.Now.AddDays(-31),
+            CategoryId = 9,
+            IsPublished = true,
             CreatorId = 5,
             AssignedUserId = 4,
             UpdatedAt= DateTime.Now.AddDays(-19),
         },
         new Ticket
         {
-            Id =20, 
-            Title = "Kitchen appliance return", 
-            Content= "Want to return kitchen appliance.", 
-            Status= TicketStatus.Pending, 
-            CategoryId = 10, 
-            IsPublished = true, 
+            Id =20,
+            Title = "Kitchen appliance return",
+            Content= "Want to return kitchen appliance.",
+            Status= TicketStatus.Pending,
+            CategoryId = 10,
+            IsPublished = true,
             CreatorId = 5
         },
 
         // Creator 6
         new Ticket
         {
-            Id =21, 
-            Title = "Electronics installation", 
-            Content= "Need help installing electronics.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 1, 
-            IsPublished = true, 
+            Id =21,
+            Title = "Electronics installation",
+            Content= "Need help installing electronics.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 1,
+            IsPublished = true,
             CreatorId = 6,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id =22, 
-            Title = "Device repair request", 
-            Content= "Requesting repair for my device.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 2, 
-            IsPublished = true, 
+            Id =22,
+            Title = "Device repair request",
+            Content= "Requesting repair for my device.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 2,
+            IsPublished = true,
             CreatorId = 6,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id =23, 
-            Title = "Fashion trend inquiry", 
-            Content= "Question about latest fashion trends.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 3, 
-            IsPublished = true, 
+            Id =23,
+            Title = "Fashion trend inquiry",
+            Content= "Question about latest fashion trends.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 3,
+            IsPublished = true,
             CreatorId = 6,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id =24, 
-            Title = "Sports gear replacement", 
-            Content= "Need replacement for sports gear.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 4, 
-            IsPublished = true, 
+            Id =24,
+            Title = "Sports gear replacement",
+            Content= "Need replacement for sports gear.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 4,
+            IsPublished = true,
             CreatorId = 6,
             AssignedUserId = 2,
         },
@@ -479,91 +490,95 @@ namespace customer_support_app.DAL.Context.DbContext
         // Creator 7
         new Ticket
         {
-            Id =25, 
-            Title = "Book recommendation", 
-            Content= "Looking for book recommendations.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 5, 
-            IsPublished = true, 
+            Id =25,
+            Title = "Book recommendation",
+            Content= "Looking for book recommendations.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 5,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id =26, 
-            Title = "Toy return request", 
-            Content= "Want to return a toy.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 6, 
-            IsPublished = true, 
+            Id =26,
+            Title = "Toy return request",
+            Content= "Want to return a toy.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 6,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 2,
         },
         new Ticket
         {
-            Id =27, 
-            Title = "Car parts inquiry", 
-            Content= "Question about car parts.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 7, 
-            IsPublished = true, 
+            Id =27,
+            Title = "Car parts inquiry",
+            Content= "Question about car parts.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 7,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 3,
         },
         new Ticket
         {
-            Id =28, 
-            Title = "Beauty product query", 
-            Content= "Inquiry about beauty products.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 8, 
-            IsPublished = true, 
+            Id =28,
+            Title = "Beauty product query",
+            Content= "Inquiry about beauty products.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 8,
+            IsPublished = true,
             CreatorId = 7,
             AssignedUserId = 3,
+                                    CreatedAt = DateTime.Now.AddDays(-100),
         },
 
         // Creator 8
         new Ticket
         {
-            Id =29, 
-            Title = "Furniture return", 
-            Content= "Want to return furniture.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 9, 
-            IsPublished = true, 
+            Id =29,
+            Title = "Furniture return",
+            Content= "Want to return furniture.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 9,
+            IsPublished = true,
             CreatorId = 8,
             AssignedUserId = 3,
+                                    CreatedAt = DateTime.Now.AddDays(-100),
         },
         new Ticket
         {
-            Id =30, 
-            Title = "Kitchen appliance issue", 
-            Content= "Kitchen appliance is not functioning.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 10, 
-            IsPublished = true, 
+            Id =30,
+            Title = "Kitchen appliance issue",
+            Content= "Kitchen appliance is not functioning.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 10,
+            IsPublished = true,
             CreatorId = 8,
             AssignedUserId = 3,
+                                    CreatedAt = DateTime.Now.AddDays(-100),
         },
         new Ticket
         {
-            Id =31, 
-            Title = "Electronics technical help", 
-            Content= "Need technical help for electronics.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 1, 
-            IsPublished = true, 
+            Id =31,
+            Title = "Electronics technical help",
+            Content= "Need technical help for electronics.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 1,
+            IsPublished = true,
             CreatorId = 8,
             AssignedUserId = 3,
+                        CreatedAt = DateTime.Now.AddDays(-100),
         },
         new Ticket
         {
-            Id =32, 
-            Title = "Device warranty extension", 
-            Content= "Requesting warranty extension.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 2, 
-            IsPublished = true, 
+            Id =32,
+            Title = "Device warranty extension",
+            Content= "Requesting warranty extension.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 2,
+            IsPublished = true,
             CreatorId = 8,
             AssignedUserId = 4,
         },
@@ -571,90 +586,93 @@ namespace customer_support_app.DAL.Context.DbContext
         // Creator 9
         new Ticket
         {
-            Id =33, 
-            Title = "Fashion item return", 
-            Content= "Want to return a fashion item.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 3, 
-            IsPublished = true, 
+            Id =33,
+            Title = "Fashion item return",
+            Content= "Want to return a fashion item.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 3,
+            IsPublished = true,
             CreatorId = 9,
             AssignedUserId = 4,
         },
         new Ticket
         {
             Id =34,
-            Title = "Sports gear repair", 
-            Content= "Requesting repair for sports gear.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 4, 
-            IsPublished = true, 
+            Title = "Sports gear repair",
+            Content= "Requesting repair for sports gear.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 4,
+            IsPublished = true,
             CreatorId = 9,
             AssignedUserId = 4,
         },
         new Ticket
         {
-            Id =35, 
-            Title = "Book replacement", 
-            Content= "Need a replacement for my book.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 5, 
-            IsPublished = true, 
+            Id =35,
+            Title = "Book replacement",
+            Content= "Need a replacement for my book.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 5,
+            IsPublished = true,
             CreatorId = 9,
             AssignedUserId = 4,
         },
         new Ticket
         {
-            Id =36, 
-            Title = "Toy assembly issue", 
-            Content= "Need help with toy assembly.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 6, 
-            IsPublished = true, 
+            Id =36,
+            Title = "Toy assembly issue",
+            Content= "Need help with toy assembly.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 6,
+            IsPublished = true,
             CreatorId = 9,
             AssignedUserId = 4,
+            CreatedAt = DateTime.Now.AddDays(-180),
         },
 
         // Creator 10
         new Ticket
         {
-            Id =37, 
-            Title = "Car warranty", 
-            Content= "Question about car warranty.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 7, 
-            IsPublished = true, 
+            Id =37,
+            Title = "Car warranty",
+            Content= "Question about car warranty.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 7,
+            IsPublished = true,
             CreatorId = 10,
             AssignedUserId = 4,
+                        CreatedAt = DateTime.Now.AddDays(-180),
         },
         new Ticket
         {
-            Id =38, 
-            Title = "Beauty product exchange", 
-            Content= "Want to exchange beauty products.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 8, 
+            Id =38,
+            Title = "Beauty product exchange",
+            Content= "Want to exchange beauty products.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 8,
+            IsPublished = true,
+            CreatorId = 10,
+            AssignedUserId = 4,
+                        CreatedAt = DateTime.Now.AddDays(-180),
+        },
+        new Ticket
+        {
+            Id =39,
+            Title = "Furniture cleaning advice",
+            Content= "Need advice on cleaning furniture.",
+            Status= TicketStatus.Waiting, CategoryId = 9,
             IsPublished = true,
             CreatorId = 10,
             AssignedUserId = 4,
         },
         new Ticket
         {
-            Id =39,
-            Title = "Furniture cleaning advice", 
-            Content= "Need advice on cleaning furniture.", 
-            Status= TicketStatus.Waiting, CategoryId = 9, 
-            IsPublished = true, 
-            CreatorId = 10,
-            AssignedUserId = 4,
-        },
-        new Ticket
-        {
-            Id =40, 
-            Title = "Kitchen appliance inquiry", 
-            Content= "Inquiry about kitchen appliance features.", 
-            Status= TicketStatus.Waiting, 
-            CategoryId = 10, 
-            IsPublished = true, 
+            Id =40,
+            Title = "Kitchen appliance inquiry",
+            Content= "Inquiry about kitchen appliance features.",
+            Status= TicketStatus.Waiting,
+            CategoryId = 10,
+            IsPublished = true,
             CreatorId = 10,
             AssignedUserId = 4,
         },
@@ -666,7 +684,7 @@ namespace customer_support_app.DAL.Context.DbContext
         {
             var comments = new List<Comment>
             {
-                new Comment 
+                new Comment
                 {
                     Id = 1,
                     Message = "I have an issiue about my electronic device.",
@@ -700,7 +718,7 @@ namespace customer_support_app.DAL.Context.DbContext
                 },
             };
 
-            return comments;   
+            return comments;
         }
 
         #endregion

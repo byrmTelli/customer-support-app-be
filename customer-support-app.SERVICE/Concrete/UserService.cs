@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using customer_support_app.DAL.Abstract;
+using customer_support_app.SERVICE.Utilities.Abstract;
 
 namespace customer_support_app.SERVICE.Concrete
 {
@@ -23,12 +24,41 @@ namespace customer_support_app.SERVICE.Concrete
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly IMapper _mapper;
-        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager,IMapper mapper,IUserDal userDal)
+        private readonly IUserInfo _userInfo;
+        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager,IMapper mapper,IUserDal userDal,IUserInfo userInfo)
         {
             _userDal = userDal;
             _userManager = userManager;
-            _roleManager = roleManager; 
+            _roleManager = roleManager;
+            _userInfo = userInfo;
             _mapper = mapper;
+        }
+        public async Task<IResult> ApproveUser(int userId)
+        {
+            try
+            {
+                var result = await _userDal.ApproveUser(userId);
+
+                return result;
+
+            }
+            catch(Exception ex)
+            {
+                return new ErrorResult("Error occured.", StatusCodes.Status500InternalServerError);
+            }
+        }
+        public async Task<IDataResult<UserProfileForAdminPanelViewModel>> GetUserProfileForAdminPanelAsync(int id)
+        {
+            try
+            {
+               var result = await _userDal.GetUserProfileForAdminPanelAsync(id);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<UserProfileForAdminPanelViewModel>("Error occured.",StatusCodes.Status500InternalServerError);
+            }
         }
         public async Task<IDataResult<List<CustomerProfileViewModel>>> GetCustomersForAdminPanelAsync()
         {
@@ -70,7 +100,6 @@ namespace customer_support_app.SERVICE.Concrete
             }
         }
         public async Task<IDataResult<UserProfileViewModel>> UpdateUserAsync(UpdateUserRequestModel model)
-
         {
             try
             {
@@ -85,6 +114,11 @@ namespace customer_support_app.SERVICE.Concrete
                 isUserExist.Surname = model.Surname;
                 isUserExist.Adress = model.Address;
                 isUserExist.PhoneNumber = model.PhoneNumber;
+
+                if (!string.IsNullOrEmpty(model.ProfileImage))
+                {
+                    isUserExist.ProfileImage = Convert.FromBase64String(model.ProfileImage.Split(",")[1]);
+                }
 
                 var result = await _userManager.UpdateAsync(isUserExist);
                 if(!result.Succeeded)

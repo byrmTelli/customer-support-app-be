@@ -11,7 +11,7 @@ using customer_support_app.DAL.Context.DbContext;
 namespace customer_support_app.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241023202543_mig_init")]
+    [Migration("20241030150439_mig_init")]
     partial class mig_init
     {
         /// <inheritdoc />
@@ -331,6 +331,57 @@ namespace customer_support_app.DAL.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("customer_support_app.CORE.DBModels.FileAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Creator")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("FileAttechments");
+                });
+
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
                     b.Property<int>("Id")
@@ -342,6 +393,9 @@ namespace customer_support_app.DAL.Migrations
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -473,6 +527,17 @@ namespace customer_support_app.DAL.Migrations
                     b.Navigation("Ticket");
                 });
 
+            modelBuilder.Entity("customer_support_app.CORE.DBModels.FileAttachment", b =>
+                {
+                    b.HasOne("customer_support_app.CORE.DBModels.Ticket", "Ticket")
+                        .WithMany("Attachments")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
                     b.HasOne("customer_support_app.CORE.DBModels.AppUser", "AssignedTo")
@@ -517,6 +582,8 @@ namespace customer_support_app.DAL.Migrations
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
                     b.Navigation("Activities");
+
+                    b.Navigation("Attachments");
 
                     b.Navigation("Comments");
                 });

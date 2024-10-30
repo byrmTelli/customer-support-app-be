@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace customer_support_app.CORE.ViewModels.User
 {
-    public class CustomerProfileViewModel
+    public class UserProfileForAdminPanelViewModel
     {
         public int Id { get; set; }
         public string Username { get; set; }
@@ -18,6 +18,6 @@ namespace customer_support_app.CORE.ViewModels.User
         public DateTime CreatedAt { get; set; }
         public RoleViewModel Role { get; set; }
         public string ProfileImage { get; set; }
-        public string IsApproved { get; set; }
+        public bool IsApproved { get; set; }
     }
 }

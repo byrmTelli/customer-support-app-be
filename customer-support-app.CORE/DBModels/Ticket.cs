@@ -21,7 +21,9 @@ namespace customer_support_app.CORE.DBModels
         public bool IsPublished { get; set; } = false;
         public int CreatorId { get; set; }
         public AppUser Creator { get; set; }
+        public DateTime? ClosedAt { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<ActivityLog> Activities { get; set; }
+        public virtual ICollection<FileAttachment> Attachments { get; set; }
     }
 }

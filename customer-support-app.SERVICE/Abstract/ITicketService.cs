@@ -14,10 +14,11 @@ namespace customer_support_app.SERVICE.Abstract
     {
         Task<IDataResult<List<AdminPanelTicketsTableViewModel>>> GetAllTicketForAdmin();
         Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId);
+        Task<IDataResult<List<HelpdeskTicketsTableViewModel>>> GetTicketsOfHelpdesk();
         Task<IDataResult<List<TicketViewModel>>> GetTicketsOfUser(int id);
         Task<IResult> CreateTicket(CreateTicketRequestModel model);
         Task<IDataResult<TicketViewModel>> UpdateTicket(UpdateTicketRequestModel model);
-        Task<IDataResult<TicketViewModel>> GetTicketById(int ticketId,string senderId);
+        Task<IDataResult<TicketViewModel>> GetTicketById(int ticketId);
         Task<IResult> DeleteTicket(int id);
     }
 }

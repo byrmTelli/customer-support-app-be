@@ -11,6 +11,8 @@ namespace customer_support_app.SERVICE.Abstract
 {
     public interface IUserService
     {
+        Task<IResult> ApproveUser(int userId);
+        Task<IDataResult<UserProfileForAdminPanelViewModel>> GetUserProfileForAdminPanelAsync(int id);
         Task<IDataResult<List<CustomerProfileViewModel>>> GetCustomersForAdminPanelAsync();
         Task<IDataResult<List<UserProfileViewModel>>> GetHelpDesksForAdminPanelAsync();
         Task<IDataResult<List<HelpdeskViewModel>>> GetHelpdesksAsync();
