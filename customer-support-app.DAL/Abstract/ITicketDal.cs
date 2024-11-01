@@ -16,7 +16,7 @@ namespace customer_support_app.DAL.Abstract
         Task<IResult> CreateTicketAsync(CreateTicketRequestModel model);
         Task<IDataResult<List<AdminPanelTicketsTableViewModel>>> GetAllTicketsForAdmin();
         Task<IDataResult<List<Ticket>>> GetTicketsOfUser(int id);
-        Task<IDataResult<Ticket>> GetTickedById(int ticketId, string senderId , string userRole);
+        Task<IDataResult<TicketViewModel>> GetTickedById(int ticketId, string senderId , string userRole);
         Task<IDataResult<Ticket>> UpdateTicket(UpdateTicketRequestModel model);
         Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId);
         Task<IDataResult<List<HelpdeskTicketsTableViewModel>>> GetTicketsOfHelpdesk(int id);

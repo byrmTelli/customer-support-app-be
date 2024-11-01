@@ -10,6 +10,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using customer_support_app.SERVICE.Utilities.Abstract;
 using customer_support_app.SERVICE.Utilities.Concrete;
+using customer_support_app.DAL.Helpers.Abstract;
+using customer_support_app.DAL.Helpers.Concrete;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,6 +74,8 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 
 // Utils
 builder.Services.AddScoped<IUserInfo, UserInfo>();
+// Helpers
+builder.Services.AddScoped<ICustomFileHelper, CustomFileHelper>();
 #endregion
 
 

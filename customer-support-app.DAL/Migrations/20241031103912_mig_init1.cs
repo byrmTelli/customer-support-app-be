@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace customer_support_app.DAL.Migrations
 {
     /// <inheritdoc />
-    public partial class mig_init : Migration
+    public partial class mig_init1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

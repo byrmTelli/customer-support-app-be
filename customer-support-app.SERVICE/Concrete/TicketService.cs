@@ -143,6 +143,7 @@ namespace customer_support_app.SERVICE.Concrete
 
                 var result = await _ticketDal.CreateTicketAsync(model);
 
+
                 if (result == null)
                 {
                     return new ErrorResult("Something went wrong while creating entity.", StatusCodes.Status500InternalServerError);
@@ -213,35 +214,44 @@ namespace customer_support_app.SERVICE.Concrete
                 }
 
                 // Get user's role
-                var userRole = await _userManager.GetRolesAsync(isSenderExist);
-                var role = userRole.First();
+                var userRole = _userInfo.GetUserRole();
 
-                var response = await _ticketDal.GetTickedById(ticketId, senderId, role);
-
-                if (!String.IsNullOrEmpty(response.Message))
-                {
-                    return new ErrorDataResult<TicketViewModel>(response.Message, response.Code);
-                }
-
-                var ticketVM = _mapper.Map<TicketViewModel>(response.Data);
-
-                if (response.Data.AssignedTo != null)
-                {
-
-                var assignedToUserRoleQuery = await _userManager.GetRolesAsync(response.Data.AssignedTo);
-                var assignedToUserRole = assignedToUserRoleQuery.First();
-                ticketVM.AssignedTo.Role = new RoleViewModel { Name = assignedToUserRole };
-
-                }
+                var response = await _ticketDal.GetTickedById(ticketId, senderId, userRole);
 
 
-
-                return new SuccessDataResult<TicketViewModel>(ticketVM, response.Code);
+                return response;
             }
             catch (Exception ex)
             {
                 return new ErrorDataResult<TicketViewModel>("Something went wrong while fetching data. Please check the logs.", StatusCodes.Status500InternalServerError);
             }
+        }
+        private string ConvertFileToBase64(string filePath, string fileName)
+        {
+
+            // Dosyanın var olup olmadığını kontrol et
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Dosya bulunamadı.", fileName);
+            }
+
+            // Dosya uzantısını al
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+
+            // Dosyayı byte dizisine oku
+            byte[] fileBytes = File.ReadAllBytes(filePath);
+
+            // Uzantıya göre base64 string oluştur
+            string base64String = Convert.ToBase64String(fileBytes);
+            string dataUri = extension switch
+            {
+                ".jpg" or ".jpeg" => $"data:image/jpeg;base64,{base64String}",
+                ".png" => $"data:image/png;base64,{base64String}",
+                ".pdf" => $"data:application/pdf;base64,{base64String}",
+                _ => throw new NotSupportedException($"Dosya türü desteklenmiyor: {extension}")
+            };
+
+            return dataUri;
         }
         public async Task<IResult> DeleteTicket(int id)
         {

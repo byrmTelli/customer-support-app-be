@@ -21,15 +21,23 @@ using System.Net.Http.Headers;
 using customer_support_app.CORE.Constants;
 using System.Security.Cryptography;
 using System.Collections.Specialized;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using customer_support_app.CORE.ViewModels.Comment;
+using customer_support_app.CORE.ViewModels.LogActivity;
+using customer_support_app.CORE.ViewModels.Attachments;
+using customer_support_app.DAL.Helpers.Abstract;
+using customer_support_app.CORE.Utilities;
 
 namespace customer_support_app.DAL.Concrete
 {
     public class TicketDal : EfEntityRepositoryBase<Ticket, AppDbContext>, ITicketDal
     {
         private readonly AppDbContext _context;
+        private readonly ICustomFileHelper _fileHelper;
         private static readonly List<string> AllowedExtensions = new List<string> { ".jpg", ".png", ".pdf" };
-        public TicketDal(AppDbContext context) : base(context)
+        public TicketDal(AppDbContext context,ICustomFileHelper fileHelper) : base(context)
         {
+            _fileHelper = fileHelper;
             _context = context;
         }
 
@@ -60,56 +68,69 @@ namespace customer_support_app.DAL.Concrete
                     };
 
                     await _context.Tickets.AddAsync(newTicket);
-                    await _context.SaveChangesAsync(); // Ticket'i kaydedip Id ataması yapılmasını sağlıyoruz
+                    await _context.SaveChangesAsync(); 
 
                     var ticketId = newTicket.Id; // Bu noktada Ticket ID mevcut olacak
 
                     // Dosyalar için yol belirleme
-                    string uploadPath = Path.Combine("uploads", ticketId.ToString());
+                    string uploadPath = Path.Combine("Uploads", ticketId.ToString());
                     Directory.CreateDirectory(uploadPath);
 
                     var fileAttachments = new List<FileAttachment>();
-
-                    foreach (var file in model.Files)
+                    if (model.Files != null )
                     {
-                        if (file.Length > 0)
+                        foreach (var file in model.Files)
                         {
-                            // Dosya uzantısı kontrolü
-                            string fileExtension = Path.GetExtension(file.FileName).ToLower();
-                            if (!AllowedExtensions.Contains(fileExtension))
+                            if (file.Length > 0)
                             {
-                                throw new InvalidOperationException($"file extension is not permitted: {fileExtension}");
+                                // Dosya uzantısı kontrolü
+                                string fileExtension = Path.GetExtension(file.FileName).ToLower();
+                                if (!AllowedExtensions.Contains(fileExtension))
+                                {
+                                    throw new InvalidOperationException($"file extension is not permitted: {fileExtension}");
+                                }
+
+                                // Hash'lenmiş dosya adı ve kaydetme yolu
+                                string hashedFileName = GenerateHashedFileName(file.FileName);
+                                var filePath = Path.Combine(uploadPath, hashedFileName);
+
+                                using (var stream = new FileStream(filePath, FileMode.Create))
+                                {
+                                    await file.CopyToAsync(stream);
+                                }
+
+                                // FileAttachment nesnesi oluşturma
+                                var attachment = new FileAttachment
+                                {
+                                    TicketId = ticketId, // Artık TicketId burada mevcut
+                                    FileName = hashedFileName,
+                                    OriginalName = file.FileName,
+                                    FilePath = filePath,
+                                    FileType = file.ContentType,
+                                    FileSize = file.Length,
+                                    Creator = newTicket.Creator.Email
+                                };
+
+                                fileAttachments.Add(attachment);
                             }
-
-                            // Hash'lenmiş dosya adı ve kaydetme yolu
-                            string hashedFileName = GenerateHashedFileName(file.FileName);
-                            var filePath = Path.Combine(uploadPath, hashedFileName);
-
-                            using (var stream = new FileStream(filePath, FileMode.Create))
-                            {
-                                await file.CopyToAsync(stream);
-                            }
-
-                            // FileAttachment nesnesi oluşturma
-                            var attachment = new FileAttachment
-                            {
-                                TicketId = ticketId, // Artık TicketId burada mevcut
-                                FileName = hashedFileName,
-                                OriginalName = file.FileName,
-                                FilePath = filePath,
-                                FileType = file.ContentType,
-                                FileSize = file.Length,
-                                Creator = newTicket.Creator.Email
-                            };
-
-                            fileAttachments.Add(attachment);
                         }
+
+                        // FileAttachment nesnelerini veritabanına kaydetme
+                        await _context.FileAttechments.AddRangeAsync(fileAttachments);
+                        await _context.SaveChangesAsync();
                     }
 
-                    // FileAttachment nesnelerini veritabanına kaydetme
-                    await _context.FileAttechments.AddRangeAsync(fileAttachments);
-                    await _context.SaveChangesAsync();
 
+
+                    var newActivityLog = new ActivityLog
+                    {
+                        TicketId = ticketId,
+                        UserId = model.CreatorId,
+                        Description = $"{model.Title} ticket created."
+                    };
+
+                    await _context.ActivityLogs.AddAsync(newActivityLog);
+                    await _context.SaveChangesAsync();
                     // Transaction'u onaylama (commit)
                     await transaction.CommitAsync();
 
@@ -127,7 +148,6 @@ namespace customer_support_app.DAL.Concrete
                 }
             }
         }
-
         public async Task<IDataResult<List<AdminPanelTicketsTableViewModel>>> GetAllTicketsForAdmin()
         {
             try
@@ -271,46 +291,140 @@ namespace customer_support_app.DAL.Concrete
                 return new ErrorResult("Something went wrong. Please check the application logs.",StatusCodes.Status500InternalServerError);
             }
         }
-        public async Task<IDataResult<Ticket>> GetTickedById(int ticketId, string senderId, string userRole)
+        public async Task<IDataResult<TicketViewModel>> GetTickedById(int ticketId, string senderId, string userRole)
         {
             try
             {
 
                 var senderIdInt = Int32.Parse(senderId);
 
-                var isTicketExist = await _context.Tickets
-                    .Include(x => x.Creator)
-                    .Include(x => x.Category)
-                    .Include(x => x.AssignedTo)
-                    .Include(x => x.Activities)
-                    .Include(x => x.Comments)
-                    .ThenInclude(c => c.Creator)
-                    .Where(x => x.Id == ticketId)
-                    .FirstOrDefaultAsync();
+                // Ticket With Category Query
+                var ticketWithCategoryQuery = from ticket in _context.Tickets
+                                              join category in _context.Categories on ticket.CategoryId equals category.Id
+                                              where ticket.Id == ticketId
+                                              select new { Ticket = ticket, Category = category };
+                // User With Role Query
+                var userWithRoleQuery = from userRoles in _context.UserRoles
+                                        join user in _context.Users on userRoles.UserId equals user.Id
+                                        join role in _context.Roles on userRoles.RoleId equals role.Id
+                                        select new { User = user, Role = role };
+
+                var combinedQuery = await (from twc in ticketWithCategoryQuery
+                                    join cr in userWithRoleQuery on twc.Ticket.CreatorId equals cr.User.Id
+                                    // Assigned user may be null
+                                    join au in userWithRoleQuery on twc.Ticket.AssignedUserId equals au.User.Id
+                                    into ticketAssignedUser
+                                    from au in ticketAssignedUser.DefaultIfEmpty()
+                                    where twc.Ticket.Id == ticketId
+                                    select new TicketViewModel 
+                                    { 
+                                        Id = twc.Ticket.Id,
+                                        Title = twc.Ticket.Title,
+                                        Content = twc.Ticket.Content,
+                                        Status = twc.Ticket.Status,
+                                        Category = new CategoryViewModel
+                                        {
+                                            Id = twc.Category.Id,
+                                            Name = twc.Category.Name
+                                        },
+                                        CreatedAt = twc.Ticket.CreatedAt,
+                                        Creator = new UserViewModel
+                                        {
+                                            Id = cr.User.Id,
+                                            FullName = $"{cr.User.Name} {cr.User.Surname}",
+                                            UserName = cr.User.UserName,
+                                            ProfileImage = cr.User.ProfileImage != null ? ImageHelper.ConvertImageToBase64String(cr.User.ProfileImage) : null
+                                        },
+                                        AssignedTo = twc.Ticket.AssignedUserId == null ? null :  new HelpdeskViewModel
+                                        {
+                                            Id = au.User.Id,
+                                            FullName = $"{au.User.Name} {au.User.Surname}",
+                                            Role = new RoleViewModel
+                                            {
+                                                Name = au.Role.Name
+                                            }
+                                        },
+                                        Comments = null,
+                                        Activities = null,
+                                        Files = null
+                                    }).FirstOrDefaultAsync();
 
 
-                if(userRole == RoleTypes.Customer && isTicketExist.CreatorId != senderIdInt)
+                var comments = await (from comment in _context.Comments
+                               join cOwner in userWithRoleQuery on comment.CreatorId equals cOwner.User.Id
+                               where comment.TicketId == ticketId
+                               select new CommentViewModel
+                               {
+                                   Id  = comment.Id,
+                                   Message = comment.Message,
+                                   Creator = new UserViewModel
+                                   {
+                                       Id = cOwner.User.Id,
+                                       FullName = $"{cOwner.User.Name} {cOwner.User.Surname}",
+                                       UserName =cOwner.User.UserName,
+                                       ProfileImage = cOwner.User.ProfileImage != null ? ImageHelper.ConvertImageToBase64String(cOwner.User.ProfileImage) : null
+                                   },
+                                   CreatedAt = comment.CreatedAt
+                                   
+                               }).ToListAsync();
+
+                if(combinedQuery == null) 
                 {
-                    return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
+                    return new ErrorDataResult<TicketViewModel>("Bad request", StatusCodes.Status400BadRequest);
                 }
 
-                if(userRole == RoleTypes.Helpdesk && isTicketExist.AssignedUserId != senderIdInt)
+                if (comments != null)
                 {
-                    return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
+                    combinedQuery.Comments = comments;
+                }
+
+                var activities = await (from activity in _context.ActivityLogs 
+                                        where activity.TicketId == ticketId
+                                        select new LogActivityViewModel
+                                        {
+                                            Id = activity.Id,
+                                            Description = activity.Description,
+                                            CreatedAt = activity.CreatedAt,
+                                        }).ToListAsync();
+
+
+                var fileRecords = await (from file in _context.FileAttechments
+                                         where file.TicketId == ticketId
+                                         select new
+                                         {
+                                             file.FileName,
+                                             file.FilePath,
+                                             file.FileType,
+                                         }).ToListAsync();
+
+                var files = fileRecords.Select(file => new TicketAttacmentViewModel
+                {
+                    FileName = file.FileName,
+                    File = _fileHelper.ConvertFileToBase64(file.FileName, file.FilePath),
+                    FileType = file.FileType,
+
+                }).ToList();
+
+                combinedQuery.Activities = activities;
+                combinedQuery.Files = files;
+
+
+                if (userRole == RoleTypes.Customer && combinedQuery.Creator.Id != senderIdInt)
+                {
+                    return new ErrorDataResult<TicketViewModel>("Bad request.", StatusCodes.Status400BadRequest);
+                }
+
+                if(userRole == RoleTypes.Helpdesk && combinedQuery.AssignedTo.Id != senderIdInt)
+                {
+                    return new ErrorDataResult<TicketViewModel>("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
 
-                if (isTicketExist == null)
-                {
-                    return new ErrorDataResult<Ticket>("Bad request.", StatusCodes.Status400BadRequest);
-                }
-
-
-                return new SuccessDataResult<Ticket>(isTicketExist, StatusCodes.Status200OK);
+                return new SuccessDataResult<TicketViewModel>(combinedQuery, StatusCodes.Status200OK);
             }
             catch (Exception ex)
             {
-                return new ErrorDataResult<Ticket>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
+                return new ErrorDataResult<TicketViewModel>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
             }
         }
         public async Task<IDataResult<List<Ticket>>> GetTicketsOfUser(int id)

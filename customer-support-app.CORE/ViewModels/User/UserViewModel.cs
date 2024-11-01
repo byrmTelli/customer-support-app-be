@@ -11,5 +11,6 @@ namespace customer_support_app.CORE.ViewModels.User
         public int Id { get; set; }
         public string FullName { get; set; }
         public string UserName { get; set; }
+        public string ProfileImage { get; set; }
     }
 }

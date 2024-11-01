@@ -11,8 +11,8 @@ using customer_support_app.DAL.Context.DbContext;
 namespace customer_support_app.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241030150439_mig_init")]
-    partial class mig_init
+    [Migration("20241031103912_mig_init1")]
+    partial class mig_init1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
