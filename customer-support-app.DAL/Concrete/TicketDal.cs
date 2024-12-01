@@ -141,9 +141,6 @@ namespace customer_support_app.DAL.Concrete
                     // Transaction rollback
                     await transaction.RollbackAsync();
 
-                    // Hata loglama
-                    Console.WriteLine($"Error occurred: {ex.Message}");
-
                     return new ErrorResult("An error occurred while creating the ticket.", StatusCodes.Status500InternalServerError);
                 }
             }
