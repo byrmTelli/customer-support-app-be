@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using customer_support_app.CORE.Constants;
+using customer_support_app.DAL.Concrete;
 
 namespace customer_support_app.DAL.Context.DbContext
 {
@@ -33,6 +34,8 @@ namespace customer_support_app.DAL.Context.DbContext
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<SystemNotification> SystemNotifications { get; set; }
+        public DbSet<TicketNotification> TicketNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -76,6 +79,16 @@ namespace customer_support_app.DAL.Context.DbContext
                 .HasMany(ticket => ticket.Activities)
                 .WithOne(activity => activity.Ticket)
                 .HasForeignKey(activity => activity.TicketId);
+
+            modelBuilder.Entity<AppUser>()
+                .HasMany(user => user.TicketNotifications)
+                .WithOne(notification => notification.User)
+                .HasForeignKey(notification => notification.UserId);
+
+            modelBuilder.Entity<Ticket>()
+                .HasMany(ticket => ticket.Notifications)
+                .WithOne(notification => notification.Ticket)
+                .HasForeignKey(notification => notification.TicketId);
 
             #endregion
 

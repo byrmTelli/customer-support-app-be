@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using customer_support_app.DAL.Context.DbContext;
 
@@ -10,9 +11,11 @@ using customer_support_app.DAL.Context.DbContext;
 namespace customer_support_app.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241201114334_CreateNotificationTableAndRelationWithUser")]
+    partial class CreateNotificationTableAndRelationWithUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -328,28 +331,6 @@ namespace customer_support_app.DAL.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("customer_support_app.CORE.DBModels.SystemNotification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SystemNotifications");
-                });
-
             modelBuilder.Entity("customer_support_app.CORE.DBModels.Ticket", b =>
                 {
                     b.Property<int>("Id")
@@ -403,7 +384,7 @@ namespace customer_support_app.DAL.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("customer_support_app.CORE.DBModels.TicketNotification", b =>
+            modelBuilder.Entity("customer_support_app.CORE.DBModels.UserNotification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -419,9 +400,6 @@ namespace customer_support_app.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TicketId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -431,11 +409,9 @@ namespace customer_support_app.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TicketId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("TicketNotifications");
+                    b.ToTable("UserNotifications");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -552,21 +528,13 @@ namespace customer_support_app.DAL.Migrations
                     b.Navigation("Creator");
                 });
 
-            modelBuilder.Entity("customer_support_app.CORE.DBModels.TicketNotification", b =>
+            modelBuilder.Entity("customer_support_app.CORE.DBModels.UserNotification", b =>
                 {
-                    b.HasOne("customer_support_app.CORE.DBModels.Ticket", "Ticket")
-                        .WithMany("Notifications")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("customer_support_app.CORE.DBModels.AppUser", "User")
-                        .WithMany("TicketNotifications")
+                        .WithMany("Notifications")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Ticket");
 
                     b.Navigation("User");
                 });
@@ -577,9 +545,9 @@ namespace customer_support_app.DAL.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("TicketActivities");
+                    b.Navigation("Notifications");
 
-                    b.Navigation("TicketNotifications");
+                    b.Navigation("TicketActivities");
 
                     b.Navigation("UsersTickets");
                 });
@@ -594,8 +562,6 @@ namespace customer_support_app.DAL.Migrations
                     b.Navigation("Activities");
 
                     b.Navigation("Comments");
-
-                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }

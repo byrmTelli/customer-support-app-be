@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using customer_support_app.SERVICE.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,15 +58,19 @@ builder.Services.AddScoped<ICategoryDal, CategoryDal>();
 builder.Services.AddScoped<ICommentDal, CommentDal>();
 builder.Services.AddScoped<IUserDal, UserDal>();
 builder.Services.AddScoped<ILogActivityDal, LogActivityDal>();
+builder.Services.AddScoped<ITicketNotificationDal, TicketNotificationDal>();
+builder.Services.AddScoped<UserInfo>();
 
 // Service
 builder.Services.AddScoped<ICategoryService,CategoryService>();
 builder.Services.AddScoped<ITicketService,TicketService>();
+builder.Services.AddScoped<INotificationService,NotificationService>();
 builder.Services.AddScoped<ICommentService,CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 #endregion
 
+builder.Services.AddHttpContextAccessor();
 
 #region CORS
 
@@ -78,7 +83,6 @@ builder.Services.AddCors(options =>
 });
 
 #endregion
-
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

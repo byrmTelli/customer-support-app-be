@@ -16,6 +16,7 @@ namespace customer_support_app.CORE.DBModels
         public List<Ticket> AssignedTickets { get; set; }
         public List<Comment> Comments { get; set; }
         public List<ActivityLog> TicketActivities { get; set; }
+        public List<TicketNotification> TicketNotifications { get; set; }
         public DateTime CreatedAt { get; set; }=DateTime.Now;
         public DateTime? DeletedAt { get; set; }
         public bool IsApproved { get; set; } = false;

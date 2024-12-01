@@ -34,7 +34,7 @@ namespace customer_support_app.SERVICE.Concrete
             try
             {
                 var response = await _commentDal.AddCommentToTicket(_mapper.Map<Comment>(model));
-
+                
                 return new SuccessResult(response.Message,response.Code);
             }
             catch (Exception ex)

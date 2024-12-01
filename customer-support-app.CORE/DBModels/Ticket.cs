@@ -23,5 +23,6 @@ namespace customer_support_app.CORE.DBModels
         public AppUser Creator { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<ActivityLog> Activities { get; set; }
+        public virtual ICollection<TicketNotification> Notifications { get; set; }
     }
 }
