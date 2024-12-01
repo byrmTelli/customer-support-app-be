@@ -19,6 +19,7 @@ namespace customer_support_app.SERVICE.Abstract
         Task<IResult> CreateTicket(CreateTicketRequestModel model);
         Task<IDataResult<TicketViewModel>> UpdateTicket(UpdateTicketRequestModel model);
         Task<IDataResult<TicketViewModel>> GetTicketById(int ticketId);
+        Task<IDataResult<List<TicketViewModel>>> GetTicketsByCategory(int categoryId);
         Task<IResult> DeleteTicket(int id);
     }
 }

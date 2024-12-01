@@ -1,5 +1,6 @@
 ﻿using customer_support_app.CORE.Results.Abstract;
 using customer_support_app.CORE.Results.Concrete;
+using customer_support_app.CORE.ViewModels.Admin.CategoriesPage;
 using customer_support_app.CORE.ViewModels.Admin.Dashboard;
 using customer_support_app.DAL.Abstract;
 using customer_support_app.SERVICE.Abstract;
@@ -14,6 +15,21 @@ namespace customer_support_app.SERVICE.Concrete
         {
             _adminDal = adminDal;
         }
+
+        public async Task<IDataResult<CategoriesPageViewModel>> GetCategoriesPageStatistics(int categoryId)
+        {
+            try
+            {
+                var tickets  = await _adminDal.GetCategoriesPageStatisticsAsync(categoryId);
+
+                return new SuccessDataResult<CategoriesPageViewModel>(tickets, StatusCodes.Status200OK);
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<CategoriesPageViewModel>("Something went wrong while feching data.", StatusCodes.Status500InternalServerError);
+            }
+        }
+
         public async Task<IDataResult<DashboardViewModel>> GetDashoardStatistics()
         {
             try

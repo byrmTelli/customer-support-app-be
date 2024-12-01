@@ -25,6 +25,18 @@ namespace customer_support_app.API.Controllers
         {
             _ticketService = ticketService;
         }
+
+
+        [CustomAuthorization(RoleTypes.Admin)]
+        [HttpGet(nameof(GetTicketsByCategory))]
+        [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>),200)]
+        public async Task<IActionResult> GetTicketsByCategory(int categoryId) 
+        {
+            var response = await _ticketService.GetTicketsByCategory(categoryId);
+
+            return StatusCode(response.Code, response);
+        }
+
         [CustomAuthorization(RoleTypes.Helpdesk)]
         [HttpGet(nameof(GetTicketsOfHelpdesk))]
         [ProducesResponseType(typeof(IDataResult<List<HelpdeskTicketsTableViewModel>>), 200)]

@@ -14,6 +14,11 @@ using customer_support_app.CORE.Results.Concrete;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Sockets;
+using customer_support_app.CORE.ViewModels.Admin.CategoriesPage;
+using customer_support_app.CORE.ViewModels.Ticket;
+using customer_support_app.CORE.ViewModels.User;
+using customer_support_app.CORE.Utilities;
+using customer_support_app.CORE.ViewModels.Category;
 
 namespace customer_support_app.DAL.Concrete
 {
@@ -23,6 +28,65 @@ namespace customer_support_app.DAL.Concrete
         public AdminDal(AppDbContext context) : base(context)
         {
             _context = context;
+        }
+
+        public async Task<CategoriesPageViewModel> GetCategoriesPageStatisticsAsync(int categoryId)
+        {
+            try
+            {
+
+                var categoryQuery = from category in _context.Categories
+                                    where category.Id == categoryId
+                                    select new CategoryViewModel { Id = category.Id, Name = category.Name };
+
+                var categoryData = await categoryQuery.FirstOrDefaultAsync();
+
+
+                var ticketsOfCategoryQuery = from ticket in _context.Tickets
+                                             join creator in _context.Users on ticket.CreatorId equals creator.Id
+                                             where ticket.CategoryId == categoryId
+                                             select new TicketViewModel
+                                             {
+                                                 Id = ticket.Id,
+                                                 Title = ticket.Title,
+                                                 Content = ticket.Content,
+                                                 Status = ticket.Status,
+                                                 CreatedAt = ticket.CreatedAt,
+                                                 Creator = new UserViewModel
+                                                 {
+                                                     Id = creator.Id,
+                                                     FullName = $"{creator.Name} {creator.Surname}",
+                                                     ProfileImage = ImageHelper.ConvertImageToBase64String(creator.ProfileImage)
+                                                 }
+                                             };
+
+                var ticketsOfCategoryList = await ticketsOfCategoryQuery.OrderByDescending(x => x.CreatedAt).ToListAsync();
+
+                var completedCounts = ticketsOfCategoryList.Where(x => x.Status == TicketStatus.Completed).Count();
+                var pendingCounts = ticketsOfCategoryList.Where(x => x.Status == TicketStatus.Pending).Count();
+                var waitingCounts = ticketsOfCategoryList.Where(x => x.Status == TicketStatus.Waiting).Count();
+                var cancelledCounts = ticketsOfCategoryList.Where(x => x.Status == TicketStatus.Cancelled).Count();
+
+
+                var categoriesPageVM = new CategoriesPageViewModel
+                {
+                    Category = categoryData,
+                    CompletedTicketCount = completedCounts,
+                    PendingTicketCount = pendingCounts,
+                    WaitingTicketCount = waitingCounts,
+                    CancelledTicketCount = cancelledCounts,
+                    Tickets = ticketsOfCategoryList,
+                };
+
+
+                return categoriesPageVM;
+
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         public async Task<IDataResult<DashboardViewModel>> GetDashboardDataAsync()
@@ -39,10 +103,10 @@ namespace customer_support_app.DAL.Concrete
 
 
                 var customersQuery = from userRole in _context.UserRoles
-                                 join user in _context.Users on userRole.UserId equals user.Id
-                                 join role in _context.Roles on userRole.RoleId equals role.Id
-                                 where role.Name == RoleTypes.Customer
-                                 select user;
+                                     join user in _context.Users on userRole.UserId equals user.Id
+                                     join role in _context.Roles on userRole.RoleId equals role.Id
+                                     where role.Name == RoleTypes.Customer
+                                     select user;
 
                 var customersCount = customersQuery.Count();
 

@@ -15,6 +15,7 @@ using customer_support_app.SERVICE.Utilities.Abstract;
 using customer_support_app.CORE.Constants;
 using System.Security.Cryptography;
 using System.Text;
+using System.Reflection.Metadata.Ecma335;
 
 namespace customer_support_app.SERVICE.Concrete
 {
@@ -294,6 +295,26 @@ namespace customer_support_app.SERVICE.Concrete
             catch (Exception ex)
             {
                 return new ErrorDataResult<List<HelpdeskTicketsTableViewModel>>("Error occured.", StatusCodes.Status500InternalServerError);
+            }
+        }
+        public async Task<IDataResult<List<TicketViewModel>>> GetTicketsByCategory(int categoryId)
+        {
+            try
+            {
+                var userRole = _userInfo.GetUserRole();
+                
+                if(userRole != RoleTypes.Admin)
+                {
+                    return new ErrorDataResult<List<TicketViewModel>>("You have no permission to see this content.", StatusCodes.Status403Forbidden);
+                }
+                var ticketsOfRelatedCategory = await _ticketDal.GetListAsync(ticket => ticket.CategoryId == categoryId );
+
+                return new SuccessDataResult<List<TicketViewModel>>(_mapper.Map<List<TicketViewModel>>(ticketsOfRelatedCategory), StatusCodes.Status200OK);
+
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<List<TicketViewModel>>("Something went wrong while feching tickets. Please check the application logs or more information.", StatusCodes.Status500InternalServerError);
             }
         }
     }

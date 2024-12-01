@@ -1,4 +1,5 @@
 ﻿using customer_support_app.CORE.Results.Abstract;
+using customer_support_app.CORE.ViewModels.Admin.CategoriesPage;
 using customer_support_app.CORE.ViewModels.Admin.Dashboard;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,6 @@ namespace customer_support_app.DAL.Abstract
     public interface IAdminDal
     {
         Task<IDataResult<DashboardViewModel>> GetDashboardDataAsync();
+        Task<CategoriesPageViewModel> GetCategoriesPageStatisticsAsync(int categoryId);
     }
 }
