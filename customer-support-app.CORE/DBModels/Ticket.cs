@@ -25,5 +25,6 @@ namespace customer_support_app.CORE.DBModels
         public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<ActivityLog> Activities { get; set; }
         public virtual ICollection<FileAttachment> Attachments { get; set; }
+        public virtual ICollection<TicketNotification> Notifications { get; set; }
     }
 }

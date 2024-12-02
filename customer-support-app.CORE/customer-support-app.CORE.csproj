@@ -8,8 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Generics\" />
-    <Folder Include="Options\" />
+    <Compile Remove="Generics\**" />
+    <Compile Remove="Options\**" />
+    <EmbeddedResource Remove="Generics\**" />
+    <EmbeddedResource Remove="Options\**" />
+    <None Remove="Generics\**" />
+    <None Remove="Options\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -63,6 +63,7 @@ builder.Services.AddScoped<IUserDal, UserDal>();
 builder.Services.AddScoped<ILogActivityDal, LogActivityDal>();
 builder.Services.AddScoped<IFileDal,FileDal>();
 builder.Services.AddScoped<IAdminDal, AdminDal>();
+builder.Services.AddScoped<ISystemNotificationDal, SystemNotificationDal>();
 
 // Service
 builder.Services.AddScoped<ICategoryService,CategoryService>();
@@ -71,6 +72,7 @@ builder.Services.AddScoped<ICommentService,CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Utils
 builder.Services.AddScoped<IUserInfo, UserInfo>();

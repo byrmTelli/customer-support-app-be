@@ -34,6 +34,8 @@ namespace customer_support_app.DAL.Context.DbContext
         public DbSet<Comment> Comments { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<FileAttachment> FileAttechments { get; set; }
+        public DbSet<SystemNotification> SystemNotifications { get; set; }
+        public DbSet<TicketNotification> TicketNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,6 +84,11 @@ namespace customer_support_app.DAL.Context.DbContext
                 .HasMany(ticket => ticket.Attachments)
                 .WithOne(attachment => attachment.Ticket)
                 .HasForeignKey(attachment => attachment.TicketId);
+
+            modelBuilder.Entity<Ticket>()
+                .HasMany(ticket => ticket.Notifications)
+                .WithOne(notification => notification.Ticket)
+                .HasForeignKey(notification => notification.TicketId);
 
             #endregion
 
