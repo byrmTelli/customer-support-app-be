@@ -1,4 +1,7 @@
-﻿using System;
+﻿using customer_support_app.CORE.RequestModels.TicketNotification;
+using customer_support_app.CORE.Results.Abstract;
+using customer_support_app.CORE.ViewModels.TicketNotification;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +11,8 @@ namespace customer_support_app.DAL.Abstract
 {
     public interface ITicketNotificationDal
     {
-        Task CreateTicketNotificationAsync(int ticketId,string message);
+        Task CreateTicketNotificationAsync(CreateTicketNotificationRM model);
+        Task<List<TicketNotificationVM>> GetAllTicketNotificationsOfUser(int userId);
+        Task<List<TicketNotificationVM>> GetAllTicketNotificationsAsync();
     }
 }

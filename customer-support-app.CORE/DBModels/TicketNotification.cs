@@ -12,7 +12,7 @@ namespace customer_support_app.CORE.DBModels
         public int Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public int TicketId { get; set; }
         public Ticket Ticket { get; set; }
     }

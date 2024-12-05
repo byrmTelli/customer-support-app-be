@@ -13,6 +13,8 @@ using IResult = customer_support_app.CORE.Results.Abstract.IResult;
 using customer_support_app.CORE.ViewModels.Role;
 using customer_support_app.SERVICE.Utilities.Abstract;
 using customer_support_app.CORE.Constants;
+using customer_support_app.CORE.Enums;
+using customer_support_app.CORE.RequestModels.TicketNotification;
 using System.Security.Cryptography;
 using System.Text;
 using System.Reflection.Metadata.Ecma335;
@@ -23,11 +25,13 @@ namespace customer_support_app.SERVICE.Concrete
     {
         private readonly ITicketDal _ticketDal;
         private readonly IFileDal _fileDal;
+        private readonly ITicketNotificationDal _ticketNotificalDal;
+
         private readonly UserManager<AppUser> _userManager;
         private readonly ILogActivityDal _activityLogDal;
         private readonly IMapper _mapper;
         private readonly IUserInfo _userInfo;
-        public TicketService(ITicketDal ticketDal, IFileDal fileDal, IMapper mapper, UserManager<AppUser> userManager, ILogActivityDal activityLogDal, IUserInfo userInfo)
+        public TicketService(ITicketNotificationDal ticketNotificationDal,ITicketDal ticketDal, IFileDal fileDal, IMapper mapper, UserManager<AppUser> userManager, ILogActivityDal activityLogDal, IUserInfo userInfo)
         {
             _ticketDal = ticketDal;
             _fileDal = fileDal;
@@ -35,6 +39,7 @@ namespace customer_support_app.SERVICE.Concrete
             _mapper = mapper;
             _activityLogDal = activityLogDal;
             _userInfo = userInfo;
+            _ticketNotificalDal = ticketNotificationDal;
         }
         public async Task<IDataResult<List<AdminPanelTicketsTableViewModel>>> GetAllTicketForAdmin()
         {
@@ -79,6 +84,7 @@ namespace customer_support_app.SERVICE.Concrete
                 };
 
                 await _activityLogDal.LogActivity(logRecord);
+                await _ticketNotificalDal.CreateTicketNotificationAsync(new CreateTicketNotificationRM {TicketId =ticketId,NotificationType = TicketNotificationType.Waiting });
 
                 return new SuccessDataResult<TicketViewModel>(result.Message, result.Code);
 
@@ -315,6 +321,31 @@ namespace customer_support_app.SERVICE.Concrete
             catch(Exception ex)
             {
                 return new ErrorDataResult<List<TicketViewModel>>("Something went wrong while feching tickets. Please check the application logs or more information.", StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        public async Task<IResult> UpdateTicketStatus(string status, int ticketId)
+        {
+            try
+            {
+                var userIdString = _userInfo.GetUserID();
+                var userRole = _userInfo.GetUserRole();
+                if(!String.IsNullOrEmpty(userIdString))
+                {
+                    var userId = Int32.Parse(userIdString);
+                    var result = await _ticketDal.UpdateTicketStatus(status, ticketId,userId,userRole);
+                    
+                    return result;
+                }
+
+                return new ErrorResult("Please make sure you are authenticated.",StatusCodes.Status403Forbidden);
+
+
+            }
+            catch(Exception ex)
+            {
+                // Logging will be here.
+                return new ErrorResult(CustomerSupportAppError.InternalServerErrorMessage,StatusCodes.Status500InternalServerError);
             }
         }
     }

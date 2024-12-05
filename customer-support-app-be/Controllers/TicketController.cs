@@ -26,7 +26,17 @@ namespace customer_support_app.API.Controllers
             _ticketService = ticketService;
         }
 
+        [CustomAuthorization(RoleTypes.Admin,RoleTypes.Helpdesk)]
+        [HttpPost(nameof(UpdateTicketStatus))]
+        [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 500)]
+        [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 400)]
+        [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>), 200)]
+        public async Task<IActionResult> UpdateTicketStatus(int ticketId,string status)
+        {
+            var response = await _ticketService.UpdateTicketStatus(status, ticketId);
 
+            return StatusCode(response.Code, response);
+        }
         [CustomAuthorization(RoleTypes.Admin)]
         [HttpGet(nameof(GetTicketsByCategory))]
         [ProducesResponseType(typeof(IDataResult<List<TicketViewModel>>),200)]

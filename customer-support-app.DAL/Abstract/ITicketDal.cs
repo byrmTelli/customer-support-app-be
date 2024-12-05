@@ -1,4 +1,5 @@
-﻿using customer_support_app.CORE.DataAccess;
+﻿using customer_support_app.CORE.Constants;
+using customer_support_app.CORE.DataAccess;
 using customer_support_app.CORE.DBModels;
 using customer_support_app.CORE.RequestModels.Ticket;
 using customer_support_app.CORE.Results.Abstract;
@@ -20,5 +21,6 @@ namespace customer_support_app.DAL.Abstract
         Task<IDataResult<Ticket>> UpdateTicket(UpdateTicketRequestModel model);
         Task<IResult> AssingTicketToHelpdeskAsync(int ticketId, string assignToUserId);
         Task<IDataResult<List<HelpdeskTicketsTableViewModel>>> GetTicketsOfHelpdesk(int id);
+        Task<IResult> UpdateTicketStatus(string status, int ticketId,int userId,string userRole);
     }
 }

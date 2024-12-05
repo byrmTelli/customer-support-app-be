@@ -35,7 +35,7 @@ namespace customer_support_app.DAL.Concrete
         private readonly AppDbContext _context;
         private readonly ICustomFileHelper _fileHelper;
         private static readonly List<string> AllowedExtensions = new List<string> { ".jpg", ".png", ".pdf" };
-        public TicketDal(AppDbContext context,ICustomFileHelper fileHelper) : base(context)
+        public TicketDal(AppDbContext context, ICustomFileHelper fileHelper) : base(context)
         {
             _fileHelper = fileHelper;
             _context = context;
@@ -52,23 +52,110 @@ namespace customer_support_app.DAL.Concrete
                 return hashString + fileExtension;
             }
         }
+        public async Task<IResult> UpdateTicketStatus(string status, int ticketId,int userId,string userRole)
+        {
+            try
+            {
+                var ticketQuery = (from tc in _context.Tickets where tc.Id == ticketId select tc);
+
+                if(userRole != RoleTypes.Admin && userRole != RoleTypes.Helpdesk)
+                {
+                    return new ErrorResult("Please contact your system administrator to do this action.", StatusCodes.Status401Unauthorized);
+                }
+
+                var ticket = await ticketQuery.FirstOrDefaultAsync();
+
+                if (ticket is null)
+                {
+                    return new ErrorResult(CustomerSupportAppError.BadRequestErrorMessage, StatusCodes.Status400BadRequest);
+                }
+
+                switch (status)
+                {
+                    case TicketStatus.Cancelled:
+                        ticket.Status = TicketStatus.Cancelled;
+                        break;
+                    case TicketStatus.Completed:
+                        ticket.Status = TicketStatus.Completed;
+                        break;
+                    case TicketStatus.Pending:
+                        ticket.Status = TicketStatus.Pending;
+                        break;
+                    case TicketStatus.Waiting:
+                        ticket.Status = TicketStatus.Waiting;
+                        break;
+                    default:
+                        return new ErrorResult(CustomerSupportAppError.BadRequestErrorMessage, StatusCodes.Status400BadRequest);
+                }
+
+                var updateResult = _context.Update(ticket);
+                _context.SaveChanges();
+
+                if (updateResult is not null)
+                {
+                    await _context.TicketNotifications.AddAsync(new TicketNotification 
+                    { 
+                        Title = "Ticket updated.", 
+                        Content = $"Ticket-{ticket.Id} status has been updated as {ticket.Status}.", 
+                        TicketId = ticket.Id 
+                    });
+
+                    return new SuccessResult("Ticket status updated successfully.", StatusCodes.Status200OK);
+                }
+
+                return new ErrorResult("Something went wrong. Ticket status was not updated.", StatusCodes.Status400BadRequest);
+
+            }
+            catch (Exception ex)
+            {
+                return new ErrorResult(CustomerSupportAppError.InternalServerErrorMessage,StatusCodes.Status500InternalServerError);
+            }
+        }
         public async Task<IResult> CreateTicketAsync(CreateTicketRequestModel model)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    // Ticket oluşturma
+
+                    var helpdesksQuery = from usr in _context.Users
+                                    join userRoles in _context.UserRoles on usr.Id equals userRoles.UserId
+                                    join role in _context.Roles on userRoles.RoleId equals role.Id
+                                    where role.Name == RoleTypes.Helpdesk
+                                    join tc in _context.Tickets on usr.Id equals tc.AssignedUserId
+                                    group tc by new { UserId = usr.Id, UserName = usr.Name } into grouped
+                                    select new
+                                    {
+                                        HelpdeskUserId = grouped.Key.UserId,
+                                        HelpdeskUserName = grouped.Key.UserName,
+                                        TicketCount = grouped.Count()
+                                    };
+
+                    var lowestTicketCount = await helpdesksQuery.OrderBy(x => x.TicketCount).FirstOrDefaultAsync();
+
+                    if(lowestTicketCount is null)
+                    {
+                        transaction.Rollback();
+                        return new ErrorResult("An error occurred while creating the ticket.", StatusCodes.Status500InternalServerError);
+                    }
+
                     var newTicket = new Ticket
                     {
                         Title = model.Title,
                         Content = model.Content,
                         CreatorId = model.CreatorId,
                         CategoryId = model.CategoryId,
+                        AssignedUserId =lowestTicketCount.HelpdeskUserId,
+                        Status = TicketStatus.Waiting,
                     };
 
-                    await _context.Tickets.AddAsync(newTicket);
-                    await _context.SaveChangesAsync(); 
+                    var addTicketResult = await _context.Tickets.AddAsync(newTicket);
+                    await _context.SaveChangesAsync();
+
+                    if(addTicketResult is not null)
+                    {
+                        await _context.TicketNotifications.AddAsync(new TicketNotification {Title="Ticket assigned.",Content = "Your ticket has been assigned succesfully to a customer service user.",TicketId = newTicket.Id });
+                    }
 
                     var ticketId = newTicket.Id; // Bu noktada Ticket ID mevcut olacak
 
@@ -77,7 +164,7 @@ namespace customer_support_app.DAL.Concrete
                     Directory.CreateDirectory(uploadPath);
 
                     var fileAttachments = new List<FileAttachment>();
-                    if (model.Files != null )
+                    if (model.Files != null)
                     {
                         foreach (var file in model.Files)
                         {
@@ -149,7 +236,7 @@ namespace customer_support_app.DAL.Concrete
         {
             try
             {
-               
+
                 var ticketsWithCategoryQuery = from ticket in _context.Tickets
                                                join category in _context.Categories on ticket.CategoryId equals category.Id
                                                select ticket;
@@ -157,7 +244,7 @@ namespace customer_support_app.DAL.Concrete
                 var usersWithRolesQuery = from userRoles in _context.UserRoles
                                           join user in _context.Users on userRoles.UserId equals user.Id
                                           join role in _context.Roles on userRoles.RoleId equals role.Id
-                                          select new { user , role };
+                                          select new { user, role };
 
                 var combinedQuery = from ticket in ticketsWithCategoryQuery
                                     join creator in usersWithRolesQuery on ticket.CreatorId equals creator.user.Id
@@ -201,7 +288,7 @@ namespace customer_support_app.DAL.Concrete
 
                 return new SuccessDataResult<List<AdminPanelTicketsTableViewModel>>(result, StatusCodes.Status200OK);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new ErrorDataResult<List<AdminPanelTicketsTableViewModel>>("Something went wrong.", StatusCodes.Status500InternalServerError);
             }
@@ -270,22 +357,23 @@ namespace customer_support_app.DAL.Concrete
                     .FirstOrDefaultAsync();
 
 
-                if(isTicketExist == null)
+                if (isTicketExist == null)
                 {
-                    return new ErrorResult("Bad request.",StatusCodes.Status400BadRequest);
+                    return new ErrorResult("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
                 var userId = Int32.Parse(assignToUserId);
 
                 isTicketExist.AssignedUserId = userId;
+                isTicketExist.Status = TicketStatus.Waiting;
                 await _context.SaveChangesAsync();
 
-                return new SuccessResult("Assigned successfully.",StatusCodes.Status200OK);
+                return new SuccessResult("Assigned successfully.", StatusCodes.Status200OK);
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return new ErrorResult("Something went wrong. Please check the application logs.",StatusCodes.Status500InternalServerError);
+                return new ErrorResult("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
             }
         }
         public async Task<IDataResult<TicketViewModel>> GetTickedById(int ticketId, string senderId, string userRole)
@@ -307,65 +395,65 @@ namespace customer_support_app.DAL.Concrete
                                         select new { User = user, Role = role };
 
                 var combinedQuery = await (from twc in ticketWithCategoryQuery
-                                    join cr in userWithRoleQuery on twc.Ticket.CreatorId equals cr.User.Id
-                                    // Assigned user may be null
-                                    join au in userWithRoleQuery on twc.Ticket.AssignedUserId equals au.User.Id
-                                    into ticketAssignedUser
-                                    from au in ticketAssignedUser.DefaultIfEmpty()
-                                    where twc.Ticket.Id == ticketId
-                                    select new TicketViewModel 
-                                    { 
-                                        Id = twc.Ticket.Id,
-                                        Title = twc.Ticket.Title,
-                                        Content = twc.Ticket.Content,
-                                        Status = twc.Ticket.Status,
-                                        Category = new CategoryViewModel
-                                        {
-                                            Id = twc.Category.Id,
-                                            Name = twc.Category.Name
-                                        },
-                                        CreatedAt = twc.Ticket.CreatedAt,
-                                        Creator = new UserViewModel
-                                        {
-                                            Id = cr.User.Id,
-                                            FullName = $"{cr.User.Name} {cr.User.Surname}",
-                                            UserName = cr.User.UserName,
-                                            ProfileImage = cr.User.ProfileImage != null ? ImageHelper.ConvertImageToBase64String(cr.User.ProfileImage) : null
-                                        },
-                                        AssignedTo = twc.Ticket.AssignedUserId == null ? null :  new HelpdeskViewModel
-                                        {
-                                            Id = au.User.Id,
-                                            FullName = $"{au.User.Name} {au.User.Surname}",
-                                            Role = new RoleViewModel
-                                            {
-                                                Name = au.Role.Name
-                                            }
-                                        },
-                                        Comments = null,
-                                        Activities = null,
-                                        Files = null
-                                    }).FirstOrDefaultAsync();
+                                           join cr in userWithRoleQuery on twc.Ticket.CreatorId equals cr.User.Id
+                                           // Assigned user may be null
+                                           join au in userWithRoleQuery on twc.Ticket.AssignedUserId equals au.User.Id
+                                           into ticketAssignedUser
+                                           from au in ticketAssignedUser.DefaultIfEmpty()
+                                           where twc.Ticket.Id == ticketId
+                                           select new TicketViewModel
+                                           {
+                                               Id = twc.Ticket.Id,
+                                               Title = twc.Ticket.Title,
+                                               Content = twc.Ticket.Content,
+                                               Status = twc.Ticket.Status,
+                                               Category = new CategoryViewModel
+                                               {
+                                                   Id = twc.Category.Id,
+                                                   Name = twc.Category.Name
+                                               },
+                                               CreatedAt = twc.Ticket.CreatedAt,
+                                               Creator = new UserViewModel
+                                               {
+                                                   Id = cr.User.Id,
+                                                   FullName = $"{cr.User.Name} {cr.User.Surname}",
+                                                   UserName = cr.User.UserName,
+                                                   ProfileImage = cr.User.ProfileImage != null ? ImageHelper.ConvertImageToBase64String(cr.User.ProfileImage) : null
+                                               },
+                                               AssignedTo = twc.Ticket.AssignedUserId == null ? null : new HelpdeskViewModel
+                                               {
+                                                   Id = au.User.Id,
+                                                   FullName = $"{au.User.Name} {au.User.Surname}",
+                                                   Role = new RoleViewModel
+                                                   {
+                                                       Name = au.Role.Name
+                                                   }
+                                               },
+                                               Comments = null,
+                                               Activities = null,
+                                               Files = null
+                                           }).FirstOrDefaultAsync();
 
 
                 var comments = await (from comment in _context.Comments
-                               join cOwner in userWithRoleQuery on comment.CreatorId equals cOwner.User.Id
-                               where comment.TicketId == ticketId
-                               select new CommentViewModel
-                               {
-                                   Id  = comment.Id,
-                                   Message = comment.Message,
-                                   Creator = new UserViewModel
-                                   {
-                                       Id = cOwner.User.Id,
-                                       FullName = $"{cOwner.User.Name} {cOwner.User.Surname}",
-                                       UserName =cOwner.User.UserName,
-                                       ProfileImage = cOwner.User.ProfileImage != null ? ImageHelper.ConvertImageToBase64String(cOwner.User.ProfileImage) : null
-                                   },
-                                   CreatedAt = comment.CreatedAt
-                                   
-                               }).ToListAsync();
+                                      join cOwner in userWithRoleQuery on comment.CreatorId equals cOwner.User.Id
+                                      where comment.TicketId == ticketId
+                                      select new CommentViewModel
+                                      {
+                                          Id = comment.Id,
+                                          Message = comment.Message,
+                                          Creator = new UserViewModel
+                                          {
+                                              Id = cOwner.User.Id,
+                                              FullName = $"{cOwner.User.Name} {cOwner.User.Surname}",
+                                              UserName = cOwner.User.UserName,
+                                              ProfileImage = cOwner.User.ProfileImage != null ? ImageHelper.ConvertImageToBase64String(cOwner.User.ProfileImage) : null
+                                          },
+                                          CreatedAt = comment.CreatedAt
 
-                if(combinedQuery == null) 
+                                      }).ToListAsync();
+
+                if (combinedQuery == null)
                 {
                     return new ErrorDataResult<TicketViewModel>("Bad request", StatusCodes.Status400BadRequest);
                 }
@@ -375,7 +463,7 @@ namespace customer_support_app.DAL.Concrete
                     combinedQuery.Comments = comments;
                 }
 
-                var activities = await (from activity in _context.ActivityLogs 
+                var activities = await (from activity in _context.ActivityLogs
                                         where activity.TicketId == ticketId
                                         select new LogActivityViewModel
                                         {
@@ -411,7 +499,7 @@ namespace customer_support_app.DAL.Concrete
                     return new ErrorDataResult<TicketViewModel>("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
-                if(userRole == RoleTypes.Helpdesk && combinedQuery.AssignedTo.Id != senderIdInt)
+                if (userRole == RoleTypes.Helpdesk && combinedQuery.AssignedTo.Id != senderIdInt)
                 {
                     return new ErrorDataResult<TicketViewModel>("Bad request.", StatusCodes.Status400BadRequest);
                 }

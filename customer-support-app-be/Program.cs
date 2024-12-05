@@ -64,6 +64,7 @@ builder.Services.AddScoped<ILogActivityDal, LogActivityDal>();
 builder.Services.AddScoped<IFileDal,FileDal>();
 builder.Services.AddScoped<IAdminDal, AdminDal>();
 builder.Services.AddScoped<ISystemNotificationDal, SystemNotificationDal>();
+builder.Services.AddScoped<ITicketNotificationDal, TicketNotificationDal>();
 
 // Service
 builder.Services.AddScoped<ICategoryService,CategoryService>();
@@ -86,7 +87,8 @@ builder.Services.AddScoped<ICustomFileHelper, CustomFileHelper>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
-        builder => builder.WithOrigins("https://localhost:3000", "http://localhost:3000", "https://www.customersupportapp.com")
+        builder => builder.AllowAnyOrigin()
+                           //.WithOrigins("https://localhost:3000", "http://localhost:3000", "https://www.customersupportapp.com")
                           .AllowAnyMethod()
                           .AllowAnyHeader());
 });
