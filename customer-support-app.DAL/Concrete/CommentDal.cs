@@ -16,34 +16,53 @@ using System.Threading.Tasks;
 
 namespace customer_support_app.DAL.Concrete
 {
-    public class CommentDal:EfEntityRepositoryBase<Comment,AppDbContext>,ICommentDal
+    public class CommentDal : EfEntityRepositoryBase<Comment, AppDbContext>, ICommentDal
     {
         private readonly AppDbContext _context;
-        public CommentDal(AppDbContext context):base(context)
+        public CommentDal(AppDbContext context) : base(context)
         {
             _context = context;
         }
 
-        public async Task<IResult> AddCommentToTicket(Comment entity)
+        public async Task<IResult> AddCommentToTicket(Comment entity, int senderId)
         {
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                var isTicketExist = await _context.Tickets.Where(ticket => ticket.Id == entity.TicketId).FirstOrDefaultAsync();
-                
-                if (isTicketExist == null)
+                try
                 {
-                    return new ErrorResult("Bad request.", StatusCodes.Status400BadRequest);
+                    var isTicketExist = await _context.Tickets.Where(ticket => ticket.Id == entity.TicketId).FirstOrDefaultAsync();
+
+                    if (isTicketExist == null)
+                    {
+                        return new ErrorResult("Bad request.", StatusCodes.Status400BadRequest);
+                    }
+
+                    await _context.AddAsync(entity);
+
+                    if (senderId != isTicketExist.CreatorId)
+                    {
+                        var ticketNotification = new TicketNotification { Title = $"New comment to ticket#{isTicketExist.Id}", Content = $"{entity.Message}", TicketId = isTicketExist.Id };
+                        await _context.TicketNotifications.AddAsync(ticketNotification);
+                    }
+
+                    int changeCount = await _context.SaveChangesAsync();
+
+
+                    if (!(changeCount > 0))
+                    {
+                        await transaction.RollbackAsync();
+                        return new ErrorDataResult<IResult>("Error occured while adding new entity to db.", StatusCodes.Status500InternalServerError);
+                    }
+
+                    await transaction.CommitAsync();
+                    return new SuccessResult("Entity created successfully.", StatusCodes.Status201Created);
+
                 }
-
-                await _context.AddAsync(entity);
-                await _context.SaveChangesAsync();
-
-                return new SuccessResult("Entity created successfully.", StatusCodes.Status201Created);
-
-            }
-            catch (Exception ex)
-            {
-                return new ErrorResult("Something went wrong.Please check the application logs.", StatusCodes.Status500InternalServerError);
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new ErrorResult("Something went wrong.Please check the application logs.", StatusCodes.Status500InternalServerError);
+                }
             }
         }
 
@@ -56,9 +75,9 @@ namespace customer_support_app.DAL.Concrete
                     .Where(c => c.Id == model.Id)
                     .FirstOrDefaultAsync();
 
-                if(isCommentExist == null)
+                if (isCommentExist == null)
                 {
-                    return new ErrorDataResult<Comment>("Bad request.",StatusCodes.Status400BadRequest);
+                    return new ErrorDataResult<Comment>("Bad request.", StatusCodes.Status400BadRequest);
                 }
 
                 isCommentExist.Message = model.Message;
@@ -68,10 +87,10 @@ namespace customer_support_app.DAL.Concrete
                 _context.Update(isCommentExist);
                 await _context.SaveChangesAsync();
 
-                return new SuccessDataResult<Comment>(isCommentExist,StatusCodes.Status200OK);
+                return new SuccessDataResult<Comment>(isCommentExist, StatusCodes.Status200OK);
 
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return new ErrorDataResult<Comment>("Something went wrong. Please check the application logs.", StatusCodes.Status500InternalServerError);
             }

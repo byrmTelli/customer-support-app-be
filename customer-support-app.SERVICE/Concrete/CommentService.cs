@@ -15,25 +15,31 @@ using Microsoft.AspNetCore.Http;
 using customer_support_app.CORE.ViewModels.Comment;
 using customer_support_app.CORE.Results.Abstract;
 using customer_support_app.CORE.ViewModels.User;
+using customer_support_app.SERVICE.Utilities.Concrete;
+using customer_support_app.SERVICE.Utilities.Abstract;
 
 namespace customer_support_app.SERVICE.Concrete
 {
     public class CommentService:ICommentService
     {
+        private readonly IUserInfo _userInfo;
         private readonly ICommentDal _commentDal;
         private readonly ITicketDal _ticketDal;
         private readonly IMapper _mapper;
-        public CommentService(ICommentDal commentDal,IMapper mapper)
+        public CommentService(ITicketDal ticketDal,ICommentDal commentDal,IMapper mapper, IUserInfo userInfo)
         {
+            _ticketDal = ticketDal;
             _commentDal = commentDal;
             _mapper = mapper;
+            _userInfo = userInfo;
         }
 
         public async Task<IResult> AddCommentToTicket(AddCommentToTicketRequestModel model)
         {
             try
             {
-                var response = await _commentDal.AddCommentToTicket(_mapper.Map<Comment>(model));
+                var userId = Int32.Parse(_userInfo.GetUserID());
+                var response = await _commentDal.AddCommentToTicket(_mapper.Map<Comment>(model), userId);
 
                 return new SuccessResult(response.Message,response.Code);
             }
@@ -65,7 +71,9 @@ namespace customer_support_app.SERVICE.Concrete
                 if(isCommentExist == null)
                     return new ErrorResult("Bad Request.",StatusCodes.Status400BadRequest);
 
-                await _commentDal.DeleteAsync(isCommentExist,"dummy",false);
+                var userName = _userInfo.GetUserEmail();
+
+                await _commentDal.DeleteAsync(isCommentExist, userName, false);
 
                 return new SuccessResult("Entity deleted successfully.",StatusCodes.Status200OK);
             }

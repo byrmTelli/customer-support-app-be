@@ -14,7 +14,7 @@ namespace customer_support_app.DAL.Abstract
 {
     public interface ICommentDal:IEntityRepository<Comment>
     {
-        Task<IResult> AddCommentToTicket(Comment model);
+        Task<IResult> AddCommentToTicket(Comment entity, int senderId);
         Task<IDataResult<Comment>> UpdateComment(Comment model, string updatedBy);
     }
 }

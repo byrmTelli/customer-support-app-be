@@ -77,6 +77,7 @@ namespace customer_support_app.DAL.Concrete
                         break;
                     case TicketStatus.Completed:
                         ticket.Status = TicketStatus.Completed;
+                        ticket.ClosedAt = DateTime.Now;
                         break;
                     case TicketStatus.Pending:
                         ticket.Status = TicketStatus.Pending;
@@ -147,6 +148,7 @@ namespace customer_support_app.DAL.Concrete
                         CategoryId = model.CategoryId,
                         AssignedUserId =lowestTicketCount.HelpdeskUserId,
                         Status = TicketStatus.Waiting,
+                        CreatedAt = DateTime.Now
                     };
 
                     var addTicketResult = await _context.Tickets.AddAsync(newTicket);
