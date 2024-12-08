@@ -19,6 +19,9 @@ using customer_support_app.CORE.ViewModels.Ticket;
 using customer_support_app.CORE.ViewModels.User;
 using customer_support_app.CORE.Utilities;
 using customer_support_app.CORE.ViewModels.Category;
+using customer_support_app.CORE.RequestModels.Admin.Role;
+using Microsoft.AspNetCore.Identity;
+using customer_support_app.CORE.ViewModels.Role;
 
 namespace customer_support_app.DAL.Concrete
 {
@@ -28,6 +31,69 @@ namespace customer_support_app.DAL.Concrete
         public AdminDal(AppDbContext context) : base(context)
         {
             _context = context;
+        }
+
+        public async Task<IResult> AssignRoleToUser(AssignRoleToUserRM model)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var isRoleExistQuery = from role in _context.Roles where role.Id == model.RoleId select role;
+                    var isRoleExist = await isRoleExistQuery.FirstOrDefaultAsync();
+
+                    if (isRoleExist == null)
+                    {
+                        return new ErrorResult(CustomerSupportAppError.BadRequestErrorMessage, StatusCodes.Status400BadRequest);
+                    }
+
+                    var userWithOldRoleQuery = from userRoles in _context.UserRoles
+                                               join user in _context.Users on userRoles.UserId equals user.Id
+                                               join role in _context.Roles on userRoles.RoleId equals role.Id
+                                               where user.Id == model.UserId
+                                               select new { UserRole = userRoles, User = user, Role = role };
+
+                    var userWithRole = await userWithOldRoleQuery.FirstOrDefaultAsync();
+
+                    if (userWithRole == null)
+                    {
+                        return new ErrorResult(CustomerSupportAppError.BadRequestErrorMessage, StatusCodes.Status400BadRequest);
+                    }
+
+
+                    var removeResult = _context.Remove(userWithRole.UserRole);
+
+                    if(removeResult == null)
+                    {
+                        transaction.Rollback();
+                        return new ErrorResult(CustomerSupportAppError.InternalServerErrorMessage, StatusCodes.Status500InternalServerError);
+                    }
+
+                    var newRoleAssignment = new IdentityUserRole<int>
+                    {
+                        UserId = model.UserId,
+                        RoleId = model.RoleId
+                    };
+
+                    var newRoleAddResult = await _context.UserRoles.AddAsync(newRoleAssignment);
+
+                    if(newRoleAddResult == null)
+                    {
+                        transaction.Rollback();
+                        return new ErrorResult(CustomerSupportAppError.InternalServerErrorMessage, StatusCodes.Status500InternalServerError);
+                    }
+
+                    _context.SaveChanges();
+                    transaction.Commit();
+                    return new SuccessResult("Role succesfully assigned.", StatusCodes.Status200OK);
+
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return new ErrorResult(CustomerSupportAppError.InternalServerErrorMessage, StatusCodes.Status500InternalServerError);
+                }
+            }
         }
 
         public async Task<CategoriesPageViewModel> GetCategoriesPageStatisticsAsync(int categoryId)
@@ -183,6 +249,22 @@ namespace customer_support_app.DAL.Concrete
             catch (Exception ex)
             {
                 return new ErrorDataResult<DashboardViewModel>("", StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        public async Task<IDataResult<List<AssignRoleViewModel>>> GetRolesAsyns()
+        {
+            try
+            {
+                var rolesQuery = from role in _context.Roles select new AssignRoleViewModel { Id = role.Id, Name =role.Name };
+
+                var roles = await rolesQuery.ToListAsync();
+
+                return new SuccessDataResult<List<AssignRoleViewModel>>(roles, StatusCodes.Status200OK);
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<List<AssignRoleViewModel>>(CustomerSupportAppError.InternalServerErrorMessage,StatusCodes.Status500InternalServerError);
             }
         }
     }

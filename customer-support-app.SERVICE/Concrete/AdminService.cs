@@ -1,10 +1,14 @@
-﻿using customer_support_app.CORE.Results.Abstract;
+﻿using customer_support_app.CORE.Constants;
+using customer_support_app.CORE.RequestModels.Admin.Role;
+using customer_support_app.CORE.Results.Abstract;
 using customer_support_app.CORE.Results.Concrete;
 using customer_support_app.CORE.ViewModels.Admin.CategoriesPage;
 using customer_support_app.CORE.ViewModels.Admin.Dashboard;
+using customer_support_app.CORE.ViewModels.Role;
 using customer_support_app.DAL.Abstract;
 using customer_support_app.SERVICE.Abstract;
 using Microsoft.AspNetCore.Http;
+using IResult = customer_support_app.CORE.Results.Abstract.IResult;
 
 namespace customer_support_app.SERVICE.Concrete
 {
@@ -14,6 +18,20 @@ namespace customer_support_app.SERVICE.Concrete
         public AdminService(IAdminDal adminDal)
         {
             _adminDal = adminDal;
+        }
+
+        public async Task<IResult> AssignRoleToUser(AssignRoleToUserRM model)
+        {
+            try
+            {
+                var result = await  _adminDal.AssignRoleToUser(model);
+
+                return result;
+            }
+            catch(Exception ex)
+            {
+                return new ErrorResult(CustomerSupportAppError.InternalServerErrorMessage,StatusCodes.Status500InternalServerError);
+            }
         }
 
         public async Task<IDataResult<CategoriesPageViewModel>> GetCategoriesPageStatistics(int categoryId)
@@ -41,6 +59,20 @@ namespace customer_support_app.SERVICE.Concrete
             catch (Exception ex)
             {
                 return new ErrorDataResult<DashboardViewModel>("Error occured while fetching data.",StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        public async Task<IDataResult<List<AssignRoleViewModel>>> GetRoles()
+        {
+            try
+            {
+                var result = await _adminDal.GetRolesAsyns();
+
+                return result;
+            }
+            catch(Exception ex)
+            {
+                return new ErrorDataResult<List<AssignRoleViewModel>>(CustomerSupportAppError.InternalServerErrorMessage,StatusCodes.Status500InternalServerError);
             }
         }
     }
