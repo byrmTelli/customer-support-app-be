@@ -7,6 +7,7 @@ using customer_support_app.CORE.ViewModels.SystemNotification;
 using customer_support_app.CORE.ViewModels.TicketNotification;
 using customer_support_app.DAL.Abstract;
 using customer_support_app.SERVICE.Abstract;
+using customer_support_app.SERVICE.Utilities.Abstract;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -21,10 +22,12 @@ namespace customer_support_app.SERVICE.Concrete
     {
         private readonly ISystemNotificationDal _systemNotDal;
         private readonly ITicketNotificationDal _ticketNotDal;
-        public NotificationService(ISystemNotificationDal systemNotDal,ITicketNotificationDal ticketNotDal)
+        private readonly IUserInfo _userInfo;
+        public NotificationService(ISystemNotificationDal systemNotDal,ITicketNotificationDal ticketNotDal,IUserInfo userInfo)
         {
             _systemNotDal = systemNotDal;
             _ticketNotDal = ticketNotDal;
+            _userInfo = userInfo;
         }
 
         public async Task<IResult> CreateTicketNotificationAsync(CreateTicketNotificationRM model)
@@ -45,7 +48,13 @@ namespace customer_support_app.SERVICE.Concrete
         {
             try
             {
-                var systemNots = await _systemNotDal.GetAllSystemNotificationsAsync();
+                var userEmail = _userInfo.GetUserEmail();
+
+                if (String.IsNullOrEmpty(userEmail))
+                {
+                    return new ErrorDataResult<List<SystemNotificationVM>>(CustomerSupportAppError.InternalServerErrorMessage,StatusCodes.Status500InternalServerError);
+                }
+                var systemNots = await _systemNotDal.GetAllSystemNotificationsAsync(userEmail);
 
                 return new SuccessDataResult<List<SystemNotificationVM>>(systemNots,StatusCodes.Status200OK);
             }

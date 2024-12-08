@@ -36,11 +36,16 @@ namespace customer_support_app.DAL.Concrete
 
             }
         }
-        public async Task<List<SystemNotificationVM>> GetAllSystemNotificationsAsync()
+        public async Task<List<SystemNotificationVM>> GetAllSystemNotificationsAsync(string userEmail)
         {
             try
             {
+                var isUserExistQuery = from user in _context.Users where user.Email == userEmail select user;
+
+                var isUserExist = await isUserExistQuery.FirstOrDefaultAsync();
+
                 var allSystemNotificationsQuery = from notification in _context.SystemNotifications
+                                                  where (isUserExist == null || notification.CreatedAt > isUserExist.CreatedAt)
                                                   select new SystemNotificationVM
                                                   {
                                                       Id = notification.Id,

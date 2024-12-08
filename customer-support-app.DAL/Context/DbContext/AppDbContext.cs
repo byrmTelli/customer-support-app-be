@@ -147,7 +147,8 @@ namespace customer_support_app.DAL.Context.DbContext
                 Name = "Admin",
                 Surname = "User",
                 Adress = "Admin Address",
-                ProfileImage = adminImageByte
+                ProfileImage = adminImageByte,
+                IsApproved = true
             };
 
             if (userManager.Users.All(u => u.UserName != adminUser.UserName))

@@ -81,6 +81,11 @@ namespace customer_support_app.SERVICE.Concrete
                     return new ErrorDataResult<UserLoginViewModel>("Username or password wrong.", StatusCodes.Status401Unauthorized);
                 }
 
+                if (!isUserExist.IsApproved)
+                {
+                    return new ErrorDataResult<UserLoginViewModel>("Your account is not approved by admin yet.",StatusCodes.Status401Unauthorized);
+                }
+
                 var jwtToken = await GenerateTokenAsync(isUserExist);
                 var userLoginVM = new UserLoginViewModel { Token = jwtToken };
 

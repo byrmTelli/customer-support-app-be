@@ -12,6 +12,6 @@ namespace customer_support_app.DAL.Abstract
     public interface ISystemNotificationDal
     {
         Task CreateSystemNotification(CreateSystemNotificationRM model);
-        Task<List<SystemNotificationVM>> GetAllSystemNotificationsAsync();
+        Task<List<SystemNotificationVM>> GetAllSystemNotificationsAsync(string userEmail);
     }
 }
