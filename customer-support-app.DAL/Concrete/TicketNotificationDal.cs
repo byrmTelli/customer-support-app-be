@@ -62,7 +62,7 @@ namespace customer_support_app.DAL.Concrete
         {
             var usersTicketNotificationQuery = from notification in _context.TicketNotifications
                                           join ticket in _context.Tickets on notification.TicketId equals ticket.Id
-                                          where ticket.Id == userId
+                                          where ticket.CreatorId == userId
                                           select new TicketNotificationVM
                                           {
                                               Id = notification.Id,
